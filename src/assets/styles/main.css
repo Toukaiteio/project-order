@@ -1,0 +1,122 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Serif+SC:wght@400;600&family=Noto+Sans+SC:wght@400;500;600;700&display=swap');
+
+:root {
+  /* ── Background Layers ── */
+  --bg-base:      #04080b;
+  --bg-primary:   #070c10;
+  --bg-secondary: #0c1319;
+  --bg-tertiary:  #111b24;
+  --bg-elevated:  #18252f;
+  --bg-surface:   #1e2d3a;
+
+  /* ── Text ── */
+  --text-primary:   #c4ccd4;
+  --text-secondary: #6e8094;
+  --text-muted:     #3d5060;
+  --text-inverse:   #04080b;
+
+  /* ── Accent Colors ── */
+  --accent-primary:   #2c6ea8;   /* steel blue – guide/system */
+  --accent-bright:    #4a9fd4;   /* bright blue – active/focus */
+  --accent-red:       #b83228;   /* blood red – danger/alert */
+  --accent-red-glow:  rgba(184, 50, 40, 0.18);
+  --accent-amber:     #b87320;   /* amber – warning/time */
+  --accent-green:     #237554;   /* forest green – survival */
+  --accent-purple:    #4a3d78;   /* deep purple – mystery */
+
+  /* Legacy compat */
+  --accent-danger:    var(--accent-red);
+  --accent-warning:   var(--accent-amber);
+  --accent-success:   var(--accent-green);
+  --accent-secondary: var(--accent-purple);
+
+  /* ── Borders ── */
+  --border-color:  #182330;
+  --border-bright: #243648;
+  --border-focus:  var(--accent-primary);
+
+  /* ── Geometry ── */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+
+  /* Legacy compat */
+  --border-radius-sm: var(--radius-sm);
+  --border-radius-md: var(--radius-md);
+  --border-radius-lg: var(--radius-lg);
+
+  /* ── Shadows ── */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.6);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.7);
+  --shadow-lg: 0 10px 32px rgba(0, 0, 0, 0.85);
+  --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+
+  /* ── Typography ── */
+  --font-ui:        'Noto Sans SC', -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-mono:      'IBM Plex Mono', 'SF Mono', 'Courier New', monospace;
+  --font-narrative: 'Noto Serif SC', 'STSong', 'SimSun', Georgia, serif;
+  --font-family:    var(--font-ui);
+}
+
+/* ────────────────────────────────────────── */
+/*  Base Reset                                */
+/* ────────────────────────────────────────── */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  height: 100%;
+  /* iOS Safari workaround */
+  height: -webkit-fill-available;
+}
+
+body {
+  height: 100%;
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  font-size: 16px;
+  line-height: 1.6;
+  overflow: hidden;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#app {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: inherit;
+  color: inherit;
+  transition: all 0.18s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ────────────────────────────────────────── */
+/*  Utilities                                 */
+/* ────────────────────────────────────────── */
+
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
