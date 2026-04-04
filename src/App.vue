@@ -1,218 +1,248 @@
 <template>
   <div class="game-root">
+    <!-- Character Creation Overlay -->
+    <CharacterCreation v-if="!game.started" @complete="onCreationComplete" />
 
-    <!-- ═══════════════════════════════════════════════════════ -->
-    <!--  HEADER                                                  -->
-    <!-- ═══════════════════════════════════════════════════════ -->
-    <header class="g-header">
+    <template v-else>
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <!--  HEADER                                                  -->
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <header class="g-header">
 
-      <!-- Day / Phase -->
-      <div class="hdr-day">
-        <span class="hdr-day-num">D{{ game.day }}</span>
-        <span :class="['hdr-phase', game.isRestDay ? 'phase-rest' : 'phase-game']">
-          {{ game.isRestDay ? '休息日' : '游戏日' }}
-        </span>
-      </div>
-
-      <!-- HP + Sanity  (numbers only, parallel) -->
-      <div class="hdr-vitals">
-        <div class="hdr-vital-pair">
-          <Heart :size="13" class="vital-ico ico-hp" />
-          <span class="vital-number">{{ player.stats.hp }}</span>
+        <!-- Day / Phase -->
+        <div class="hdr-day">
+          <span class="hdr-day-num">D{{ game.day }}</span>
+          <span :class="['hdr-phase', game.isRestDay ? 'phase-rest' : 'phase-game']">
+            {{ game.isRestDay ? '休息日' : '游戏日' }}
+          </span>
         </div>
-        <span class="hdr-vital-sep">·</span>
-        <div class="hdr-vital-pair">
-          <Brain :size="13" class="vital-ico ico-san" />
-          <span class="vital-number">{{ player.stats.sanity }}</span>
-        </div>
-      </div>
 
-      <!-- Clock + weather -->
-      <div class="hdr-right">
-        <span class="hdr-time">{{ formattedTime }}</span>
-        <component :is="weatherIcon" :size="13" class="hdr-wico" />
-      </div>
-
-    </header>
-
-    <!-- ═══════════════════════════════════════════════════════ -->
-    <!--  MAIN CONTENT                                            -->
-    <!-- ═══════════════════════════════════════════════════════ -->
-    <main class="g-main">
-
-      <!-- ─────── 剧情 TAB ─────────────────────────────────── -->
-      <div :class="['tab-pane', { active: tab === 'story' }]">
-
-        <!-- Mini Map Strip -->
-        <div class="map-strip">
-          <MapCanvas :nodes="mapNodes" :compact="true" />
-          <!-- Strip overlay: location label -->
-          <div class="map-strip-overlay">
-            <div class="mso-loc">
-              <MapPin :size="10" />
-              <span>{{ locationName }}</span>
-            </div>
-            <div class="mso-right">
-              <component :is="weatherIcon" :size="10" />
-              <span>{{ weatherName }}</span>
-            </div>
+        <!-- HP + Sanity  (numbers only, parallel) -->
+        <div class="hdr-vitals">
+          <div class="hdr-vital-pair">
+            <Heart :size="13" class="vital-ico ico-hp" />
+            <span class="vital-number">{{ player.stats.hp }}</span>
+          </div>
+          <span class="hdr-vital-sep">·</span>
+          <div class="hdr-vital-pair">
+            <Brain :size="13" class="vital-ico ico-san" />
+            <span class="vital-number">{{ player.stats.sanity }}</span>
           </div>
         </div>
 
-        <!-- Story Log — entries + action choices all in one stream -->
-        <div class="story-scroll scrollbar-hide" ref="logEl">
-          <div class="story-inner">
+        <!-- Clock + weather -->
+        <div class="hdr-right">
+          <span class="hdr-time">{{ formattedTime }}</span>
+          <component :is="weatherIcon" :size="13" class="hdr-wico" />
+        </div>
 
-            <!-- Day header -->
-            <div class="log-day-header">
-              <span class="ldh-line"></span>
-              <span class="ldh-text">第{{ game.day }}天 {{ weatherName }}</span>
-              <span class="ldh-line"></span>
+      </header>
+
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <!--  MAIN CONTENT                                            -->
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <main class="g-main">
+
+        <!-- ─────── 剧情 TAB ─────────────────────────────────── -->
+        <div :class="['tab-pane', { active: tab === 'story' }]">
+
+          <!-- Mini Map Strip -->
+          <div class="map-strip">
+            <MapCanvas :nodes="mapNodes" :compact="true" />
+            <!-- Strip overlay: location label -->
+            <div class="map-strip-overlay">
+              <div class="mso-loc">
+                <MapPin :size="10" />
+                <span>{{ locationName }}</span>
+              </div>
+              <div class="mso-right">
+                <component :is="weatherIcon" :size="10" />
+                <span>{{ weatherName }}</span>
+              </div>
             </div>
+          </div>
 
-            <template v-for="entry in logs" :key="entry.id">
+          <!-- Story Log — entries + action choices all in one stream -->
+          <div class="story-scroll scrollbar-hide" ref="logEl">
+            <div class="story-inner">
 
-              <!-- ── 叙事条目 ── -->
-              <div
-                v-if="entry.type !== 'actions'"
-                :class="['log-entry', `le-${entry.type}`]"
-              >
-                <span class="le-ts">{{ formatLogTime(entry.time) }}</span>
-                <p class="le-body">{{ entry.text }}</p>
+              <!-- Day header -->
+              <div class="log-day-header">
+                <span class="ldh-line"></span>
+                <span class="ldh-text">第{{ game.day }}天 {{ weatherName }}</span>
+                <span class="ldh-line"></span>
               </div>
 
-              <!-- ── 行动条目：已选择 → 显示回执；未选择 → 显示按钮 ── -->
-              <div v-else class="log-actions-entry">
+              <template v-for="entry in logs" :key="entry.id">
 
-                <!-- 已解决：显示选择记录 -->
-                <div v-if="entry.resolvedId" class="la-resolved">
-                  <span class="lar-arrow">›</span>
-                  <span class="lar-label">{{ entry.resolvedLabel }}</span>
-                  <span class="lar-cost">
-                    {{ entry.choices.find(c => c.id === entry.resolvedId)?.timeCost }}h
-                  </span>
+                <!-- ── 叙事条目 ── -->
+                <div
+                  v-if="entry.type !== 'actions'"
+                  :class="['log-entry', `le-${entry.type}`]"
+                >
+                  <span class="le-ts">{{ formatLogTime(entry.time) }}</span>
+                  <p class="le-body">{{ entry.text }}</p>
                 </div>
 
-                <!-- 未解决：显示可点击按钮 -->
-                <template v-else>
-                  <div class="ia-divider">
-                    <span class="ia-div-line"></span>
-                    <span class="ia-div-label">可选行动</span>
-                    <span class="ia-div-line"></span>
-                  </div>
-                  <div class="ia-grid">
-                    <button
-                      v-for="choice in entry.choices"
-                      :key="choice.id"
-                      :class="['ia-btn', `ia-${choice.variant}`]"
-                      @click="executeAction(entry, choice)"
-                    >
-                      <div class="ia-ico">
-                        <component :is="ACTION_ICONS[choice.id]" :size="15" />
-                      </div>
-                      <div class="ia-text">
-                        <span class="ia-label">{{ choice.label }}</span>
-                        <span class="ia-cost">{{ choice.timeCost }}h</span>
-                      </div>
-                    </button>
-                  </div>
-                </template>
+                <!-- ── 行动条目：已选择 → 显示回执；未选择 → 显示按钮 ── -->
+                <div v-else class="log-actions-entry">
 
+                  <!-- 已解决：显示选择记录 -->
+                  <div v-if="entry.resolvedId" class="la-resolved">
+                    <span class="lar-arrow">›</span>
+                    <span class="lar-label">{{ entry.resolvedLabel }}</span>
+                    <span class="lar-cost">
+                      {{ entry.choices.find(c => c.id === entry.resolvedId)?.timeCost }}h
+                    </span>
+                  </div>
+
+                  <!-- 未解决：显示可点击按钮 -->
+                  <template v-else>
+                    <div class="ia-divider">
+                      <span class="ia-div-line"></span>
+                      <span class="ia-div-label">可选行动</span>
+                      <span class="ia-div-line"></span>
+                    </div>
+                    <div class="ia-grid">
+                      <button
+                        v-for="choice in entry.choices"
+                        :key="choice.id"
+                        :class="['ia-btn', `ia-${choice.variant}`]"
+                        @click="executeAction(entry, choice)"
+                      >
+                        <div class="ia-ico">
+                          <component :is="ACTION_ICONS[choice.id]" :size="15" />
+                        </div>
+                        <div class="ia-text">
+                          <span class="ia-label">{{ choice.label }}</span>
+                          <span class="ia-cost">{{ choice.timeCost }}h</span>
+                        </div>
+                      </button>
+                    </div>
+                  </template>
+
+                </div>
+
+              </template>
+
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ─────── 背包 TAB ─────────────────────────────────── -->
+        <div :class="['tab-pane', { active: tab === 'inventory' }]">
+          <div class="inv-pane">
+
+            <div class="inv-toolbar">
+              <span class="inv-title">随身物品</span>
+              <div class="inv-cap">
+                <Package :size="12" />
+                <span>{{ inventory.length }} / 18</span>
               </div>
+            </div>
 
-            </template>
+            <!-- Empty state -->
+            <div v-if="!inventory.length" class="inv-empty">
+              <Package :size="32" class="inv-empty-ico" />
+              <p class="inv-empty-text">暂无物品</p>
+              <p class="inv-empty-sub">探索区域以获取道具和线索</p>
+            </div>
+
+            <!-- Item list -->
+            <div v-else class="inv-list scrollbar-hide">
+              <div
+                v-for="item in inventory"
+                :key="item.id"
+                class="inv-item"
+                @click="selectedItem = item"
+              >
+                <div class="ii-icon-wrap">
+                  <Package :size="18" />
+                </div>
+                <div class="ii-info">
+                  <span class="ii-name">{{ item.name }}</span>
+                  <span class="ii-desc">{{ item.description }}</span>
+                </div>
+                <div class="ii-right">
+                  <span v-if="item.quantity > 1" class="ii-qty">×{{ item.quantity }}</span>
+                  <ChevronRight :size="14" class="ii-arrow" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Item detail panel -->
+            <div v-if="selectedItem" class="inv-detail">
+              <div class="idet-header">
+                <span class="idet-name">{{ selectedItem.name }}</span>
+                <button class="idet-close" @click="selectedItem = null">
+                  <X :size="14" />
+                </button>
+              </div>
+              <p class="idet-desc">{{ selectedItem.description }}</p>
+            </div>
+            <div v-else class="inv-detail inv-detail-empty">
+              <span>选择物品查看详情</span>
+            </div>
 
           </div>
         </div>
 
-      </div>
+      </main>
 
-      <!-- ─────── 背包 TAB ─────────────────────────────────── -->
-      <div :class="['tab-pane', { active: tab === 'inventory' }]">
-        <div class="inv-pane">
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <!--  BOTTOM NAVIGATION                                       -->
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <nav class="g-nav">
+        <button
+          v-for="t in navItems"
+          :key="t.id"
+          :class="['g-nav-btn', { active: t.sidebar ? sidebarOpen : tab === t.id }]"
+          @click="handleNavClick(t)"
+        >
+          <component :is="t.icon" :size="21" />
+          <span>{{ t.label }}</span>
+          <span v-if="t.sidebar ? sidebarOpen : tab === t.id" class="nav-pip"></span>
+        </button>
+      </nav>
 
-          <div class="inv-toolbar">
-            <span class="inv-title">随身物品</span>
-            <div class="inv-cap">
-              <Package :size="12" />
-              <span>{{ inventory.length }} / 18</span>
-            </div>
-          </div>
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <!--  STATUS SIDEBAR                                          -->
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <StatusSidebar
+        :open="sidebarOpen"
+        :player="player"
+        :game="game"
+        @close="sidebarOpen = false"
+      />
 
-          <!-- Empty state -->
-          <div v-if="!inventory.length" class="inv-empty">
-            <Package :size="32" class="inv-empty-ico" />
-            <p class="inv-empty-text">暂无物品</p>
-            <p class="inv-empty-sub">探索区域以获取道具和线索</p>
-          </div>
-
-          <!-- Item list -->
-          <div v-else class="inv-list scrollbar-hide">
-            <div
-              v-for="item in inventory"
-              :key="item.id"
-              class="inv-item"
-              @click="selectedItem = item"
-            >
-              <div class="ii-icon-wrap">
-                <Package :size="18" />
-              </div>
-              <div class="ii-info">
-                <span class="ii-name">{{ item.name }}</span>
-                <span class="ii-desc">{{ item.description }}</span>
-              </div>
-              <div class="ii-right">
-                <span v-if="item.quantity > 1" class="ii-qty">×{{ item.quantity }}</span>
-                <ChevronRight :size="14" class="ii-arrow" />
-              </div>
-            </div>
-          </div>
-
-          <!-- Item detail panel -->
-          <div v-if="selectedItem" class="inv-detail">
-            <div class="idet-header">
-              <span class="idet-name">{{ selectedItem.name }}</span>
-              <button class="idet-close" @click="selectedItem = null">
-                <X :size="14" />
-              </button>
-            </div>
-            <p class="idet-desc">{{ selectedItem.description }}</p>
-          </div>
-          <div v-else class="inv-detail inv-detail-empty">
-            <span>选择物品查看详情</span>
-          </div>
-
-        </div>
-      </div>
-
-    </main>
-
-    <!-- ═══════════════════════════════════════════════════════ -->
-    <!--  BOTTOM NAVIGATION                                       -->
-    <!-- ═══════════════════════════════════════════════════════ -->
-    <nav class="g-nav">
-      <button
-        v-for="t in navItems"
-        :key="t.id"
-        :class="['g-nav-btn', { active: t.sidebar ? sidebarOpen : tab === t.id }]"
-        @click="handleNavClick(t)"
+      <!-- Global Dialog -->
+      <GameDialog 
+        :show="dialogStore.show" 
+        :title="dialogStore.options.title"
+        :variant="dialogStore.options.variant"
+        @close="dialogStore.close"
       >
-        <component :is="t.icon" :size="21" />
-        <span>{{ t.label }}</span>
-        <span v-if="t.sidebar ? sidebarOpen : tab === t.id" class="nav-pip"></span>
-      </button>
-    </nav>
+        <p>{{ dialogStore.options.content }}</p>
+        <template #footer>
+          <button 
+            v-if="dialogStore.isConfirm" 
+            class="dialog-btn cancel" 
+            @click="dialogStore.handleCancel"
+          >
+            {{ dialogStore.options.cancelText }}
+          </button>
+          <button 
+            class="dialog-btn confirm" 
+            :class="[dialogStore.options.variant]"
+            @click="dialogStore.handleConfirm"
+          >
+            {{ dialogStore.options.confirmText }}
+          </button>
+        </template>
+      </GameDialog>
 
-    <!-- ═══════════════════════════════════════════════════════ -->
-    <!--  STATUS SIDEBAR                                          -->
-    <!-- ═══════════════════════════════════════════════════════ -->
-    <StatusSidebar
-      :open="sidebarOpen"
-      :player="player"
-      :game="game"
-      @close="sidebarOpen = false"
-    />
-
+    </template>
   </div>
 </template>
 
@@ -222,16 +252,22 @@ import { storeToRefs } from 'pinia'
 import {
   Heart, Brain, Navigation, Moon, MessageSquare,
   Skull, Package, BookOpen, Sun, CloudRain, Wind,
-  MapPin, User, Users, ChevronRight, X,
+  MapPin, User, Users, ChevronRight, X, Eye, Ear,
   type Component,
 } from 'lucide-vue-next'
 import { useGameStore }            from './stores/game'
+import { useDialogStore }          from './stores/dialog'
 import type { InventoryItem, ActionsEntry, ActionChoice } from './stores/game'
 import MapCanvas     from './components/MapCanvas.vue'
 import StatusSidebar from './components/StatusSidebar.vue'
+import CharacterCreation from './views/CharacterCreation.vue'
+import GameDialog    from './components/common/GameDialog.vue'
+import { usePlot } from './composables/usePlot'
 
 const gameStore = useGameStore()
+const dialogStore = useDialogStore()
 const { player, game, logs, inventory, mapNodes } = storeToRefs(gameStore)
+const { triggerScene, handleAction } = usePlot()
 
 type TabId = 'story' | 'inventory'
 const tab          = ref<TabId>('story')
@@ -260,15 +296,25 @@ const ACTION_ICONS: Record<string, Component> = {
   rest:        Moon,
   shout:       MessageSquare,
   investigate: Skull,
+  search_bed:  Navigation,
+  examine_wall: Eye,
+  shout_help:  MessageSquare,
+  keep_note:   Package,
+  tear_note:   Skull,
+  ponder_name: Brain,
+  ignore_name: Moon,
+  listen_carefully: Ear,
+  back_to_bed: Moon,
+  hide_corner: Wind,
+  confront:    Skull,
+  // 新增区域图标
+  move_corridor: Navigation,
+  move_hall:     Navigation,
+  elena_ask_plan: MessageSquare,
+  elena_offer_help: Users,
+  marcus_pay_toll: Package,
+  marcus_confront: Skull,
 }
-
-// 本局可用行动定义
-const BASE_ACTIONS: ActionChoice[] = [
-  { id: 'explore',     label: '探索四周', timeCost: 0.50, variant: 'default' },
-  { id: 'rest',        label: '稍作休息', timeCost: 1.00, variant: 'default' },
-  { id: 'shout',       label: '尝试呼喊', timeCost: 0.25, variant: 'accent'  },
-  { id: 'investigate', label: '调查尸体', timeCost: 0.75, variant: 'danger'  },
-]
 
 // ── Computed ───────────────────────────────────────────────────
 
@@ -323,52 +369,44 @@ const executeAction = (entry: ActionsEntry, choice: ActionChoice) => {
   // 2. 消耗时间
   gameStore.consumeTime(choice.timeCost)
 
-  // 3. 执行对应逻辑，产生叙事日志
-  switch (choice.id) {
-    case 'explore':
-      gameStore.addLog(
-        '你环顾四周，这间牢房虽然昏暗，但你还是发现了一些奇怪的抓痕。某人曾在这里竭力留下什么。',
-        'story',
-      )
-      break
-    case 'rest':
-      gameStore.addLog(
-        '你闭上眼睛，试图平复心情。混乱的思绪慢慢平静下来，理智稍微恢复了一些。',
-        'info',
-      )
-      if (player.value.stats.sanity < player.value.stats.maxSanity) {
-        player.value.stats.sanity = Math.min(
-          player.value.stats.maxSanity,
-          player.value.stats.sanity + 5,
-        )
-      }
-      break
-    case 'shout':
-      gameStore.addLog(
-        '你大声呼喊，声音在空旷的走廊里来回回响。沉默是唯一的答复，只有远处隐约的滴水声。',
-        'warning',
-      )
-      break
-    case 'investigate':
-      gameStore.addLog(
-        '你靠近角落里那团黑暗……那是一具已经腐烂的尸体，口袋里似乎还塞着什么皱巴巴的东西。',
-        'story',
-      )
-      break
+  // 3. 特殊逻辑：区域移动
+  if (choice.id.startsWith('move_')) {
+    const targetId = choice.id.replace('move_', '')
+    gameStore.moveTo(targetId)
+    
+    // 留白：随机偶遇判定 (30% 几率)
+    if (Math.random() < 0.3) {
+      if (targetId === 'hall_main') triggerScene('encounter_elena_hall')
+      else if (targetId === 'corridor_a') triggerScene('encounter_marcus_corridor')
+      else triggerScene(`explore_${targetId}`)
+    } else {
+      triggerScene(`explore_${targetId}`)
+    }
+    return
   }
 
-  // 4. 追加新的行动条目（出现在叙事日志下方）
-  gameStore.addActions(BASE_ACTIONS)
+  // 4. 执行剧情逻辑
+  handleAction(choice.id)
+
+  scrollToBottom()
+}
+
+const onCreationComplete = (data: any) => {
+  console.log('onCreationComplete called with data:', data);
+  if (gameStore && typeof gameStore.startGame === 'function') {
+    gameStore.startGame(data)
+    // 触发初始剧情
+    triggerScene('awake')
+    scrollToBottom()
+  } else {
+    console.error('gameStore.startGame is not a function!', gameStore);
+  }
 }
 
 onMounted(() => {
-  gameStore.addLog(
-    '你在头痛欲裂中醒来，空气里弥漫着消毒水与铁锈的气味。你不知道自己在哪里，也不知道已经过了多久。',
-    'story',
-  )
-  // 首次行动列表出现在初始叙事下方
-  gameStore.addActions(BASE_ACTIONS)
-  scrollToBottom()
+  if (game.value.started) {
+    scrollToBottom()
+  }
 })
 </script>
 
@@ -987,4 +1025,30 @@ onMounted(() => {
   from { transform: scaleX(0.3); opacity: 0; }
   to   { transform: scaleX(1);   opacity: 1; }
 }
+
+/* ── Dialog Buttons ── */
+.dialog-btn {
+  padding: 8px 20px;
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.dialog-btn.cancel {
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.dialog-btn.cancel:active { background-color: var(--bg-tertiary); }
+
+.dialog-btn.confirm {
+  background-color: var(--accent-primary);
+  color: white;
+}
+
+.dialog-btn.confirm.danger { background-color: var(--accent-red); }
+.dialog-btn.confirm.accent { background-color: var(--accent-bright); }
+
+.dialog-btn.confirm:active { opacity: 0.8; transform: scale(0.96); }
 </style>

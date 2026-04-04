@@ -11,6 +11,7 @@ export interface PlayerStats {
 }
 
 export interface GameState {
+  started: boolean;
   day: number;
   time: number; // 0-24
   isRestDay: boolean;
@@ -44,8 +45,6 @@ export interface ActionChoice {
   variant: 'default' | 'accent' | 'danger';
 }
 
-// ── 日志条目类型（判别联合）─────────────────────────────────────
-
 export interface NarrativeEntry {
   id: string;
   time: number;
@@ -58,13 +57,11 @@ export interface ActionsEntry {
   time: number;
   type: 'actions';
   choices: ActionChoice[];
-  resolvedId?: string;      // 玩家选择后填入
+  resolvedId?: string;
   resolvedLabel?: string;
 }
 
 export type LogEntry = NarrativeEntry | ActionsEntry;
-
-// ─────────────────────────────────────────────────────────────────
 
 export const useGameStore = defineStore('game', {
   state: () => ({
@@ -83,6 +80,7 @@ export const useGameStore = defineStore('game', {
       } as PlayerStats,
     },
     game: {
+      started: false,
       day: 1,
       time: 8,
       isRestDay: true,
@@ -94,15 +92,32 @@ export const useGameStore = defineStore('game', {
     inventory: [] as InventoryItem[],
     logs: [] as LogEntry[],
     mapNodes: [
-      { id: 'cell_01',    col: 2, row: 2, label: '牢房 01', state: 'current', connections: ['corridor_a', 'cell_02'] },
-      { id: 'corridor_a', col: 4, row: 2, label: '走廊',    state: 'locked',  connections: ['cell_01', 'hall_main'] },
-      { id: 'cell_02',    col: 2, row: 4, label: '牢房 02', state: 'locked',  connections: ['cell_01']              },
-      { id: 'hall_main',  col: 6, row: 2, label: '主厅',    state: 'locked',  connections: ['corridor_a', 'outside']},
-      { id: 'outside',    col: 8, row: 2, label: '???',     state: 'locked',  connections: ['hall_main']            },
+      { id: 'cell_01',    col: 2, row: 2, label: 'Cell 01', state: 'current', connections: ['corridor_a'] },
+      { id: 'corridor_a', col: 4, row: 2, label: 'Corridor Alpha', state: 'locked',  connections: ['cell_01', 'hall_main', 'cell_02'] },
+      { id: 'cell_02',    col: 4, row: 4, label: 'Cell 02', state: 'locked',  connections: ['corridor_a'] },
+      { id: 'hall_main',  col: 6, row: 2, label: 'The Atrium', state: 'locked',  connections: ['corridor_a', 'med_bay', 'mess_hall', 'warehouse_back'] },
+      { id: 'med_bay',    col: 6, row: 0, label: 'Medical Post', state: 'locked',  connections: ['hall_main'] },
+      { id: 'mess_hall',  col: 8, row: 2, label: 'Communal Mess', state: 'locked',  connections: ['hall_main', 'garbage_chute'] },
+      { id: 'garbage_chute', col: 10, row: 2, label: 'Disposal Area', state: 'locked',  connections: ['mess_hall'] },
+      { id: 'warehouse_back', col: 6, row: 4, label: 'Hidden Cache', state: 'locked',  connections: ['hall_main'] },
     ] as MapNode[],
   }),
 
   actions: {
+    startGame(playerData: any) {
+      console.log('Starting game with data:', playerData);
+      this.player.name = playerData.name;
+      this.player.gender = playerData.gender;
+      this.player.traits = playerData.traits;
+      this.player.stats = { ...playerData.stats };
+      this.game.started = true;
+      
+      this.addLog(
+        `你在头痛欲裂中醒来，记忆的碎片逐渐拼凑出你的身份：${this.player.name}。空气里弥漫着消毒水与铁锈的气味。`,
+        'story'
+      );
+    },
+
     addLog(text: string, type: NarrativeEntry['type'] = 'info') {
       const id = `n-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
       this.logs.push({ id, time: Date.now(), text, type });
