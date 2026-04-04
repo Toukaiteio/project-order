@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+openai-key.txt
+test_openai_keys.js
+valid-keys.txt
