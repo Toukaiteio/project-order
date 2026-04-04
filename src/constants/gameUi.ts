@@ -4,6 +4,7 @@ import {
   CloudRain,
   Ear,
   Eye,
+  Heart,
   MessageSquare,
   Moon,
   Navigation,
@@ -25,9 +26,9 @@ export interface NavItem {
 }
 
 export const NAV_ITEMS: NavItem[] = [
-  { id: 'story', label: '鍓ф儏', icon: BookOpen, sidebar: false },
-  { id: 'inventory', label: '鑳屽寘', icon: Package, sidebar: false },
-  { id: 'status', label: '鐘舵€?', icon: Users, sidebar: true },
+  { id: 'story', label: '剧情', icon: BookOpen, sidebar: false },
+  { id: 'inventory', label: '背包', icon: Package, sidebar: false },
+  { id: 'status', label: '状态', icon: Users, sidebar: true },
 ]
 
 const ACTION_ICONS: Record<string, Component> = {
@@ -46,26 +47,37 @@ const ACTION_ICONS: Record<string, Component> = {
   back_to_bed: Moon,
   hide_corner: Wind,
   confront: Skull,
-  move_corridor: Navigation,
-  move_hall: Navigation,
+  move_corridor_a: Navigation,
+  move_hall_main: Navigation,
+  move_med_bay: Navigation,
+  move_mess_hall: Navigation,
+  move_warehouse_back: Navigation,
+  move_garbage_chute: Navigation,
+  move_cell_01: Navigation,
   elena_ask_plan: MessageSquare,
   elena_offer_help: Users,
   marcus_pay_toll: Package,
   marcus_confront: Skull,
+  aris_ask_meds: Heart,
+  search_hall: Eye,
 }
 
 export const WEATHER_NAMES: Record<string, string> = {
-  sunny: '鏅存湕',
-  rainy: '澶ч洦',
-  foggy: '娴撻浘',
-  blood_mist: '琛€闆?',
+  sunny: '晴朗',
+  rainy: '大雨',
+  foggy: '浓雾',
+  blood_mist: '血雾',
 }
 
 export const LOCATION_NAMES: Record<string, string> = {
-  cell_01: '鐗㈡埧 01',
-  corridor_a: '璧板粖',
-  cell_02: '鐗㈡埧 02',
-  hall_main: '涓诲巺',
+  cell_01: '牢房 01',
+  corridor_a: '走廊 Alpha',
+  cell_02: '牢房 02',
+  hall_main: '设施大厅',
+  med_bay: '医疗站',
+  mess_hall: '公共食堂',
+  warehouse_back: '秘密仓库',
+  garbage_chute: '废料处理区',
 }
 
 export function formatClockTime(value: number) {

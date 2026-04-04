@@ -1,8 +1,9 @@
 import type { PlotScene } from '../../types/plot';
 
 export const encounterPlots: Record<string, PlotScene> = {
-  'encounter_elena_hall': {
-    id: 'encounter_elena_hall',
+  // --- Elena V. Encounters ---
+  'encounter_elena_hall_main': {
+    id: 'encounter_elena_hall_main',
     locationId: 'hall_main',
     type: 'story',
     text: (ctx) => {
@@ -16,7 +17,7 @@ export const encounterPlots: Record<string, PlotScene> = {
           ctx.npcs.interact('elena', 5, 2);
           ctx.game.addLog('“我在计算死亡的概率，”她面无表情地回答，“顺便看看谁会是下一个被送进‘回收槽’的倒霉蛋。”', 'story');
         },
-        nextSceneId: 'explore_hall' // 回到通用探索
+        nextSceneId: 'explore_hall_main' 
       },
       { 
         id: 'elena_offer_help', label: '提供协作', timeCost: 1.0, variant: 'accent',
@@ -26,25 +27,27 @@ export const encounterPlots: Record<string, PlotScene> = {
           ctx.game.flags.elena_allied = true;
           ctx.game.addLog('她审视了你一会儿。“你的眼神还没死透。也许我们能达成某种共识。”', 'info');
         },
-        nextSceneId: 'explore_hall'
+        nextSceneId: 'explore_hall_main'
       }
     ]
   },
-  'encounter_marcus_corridor': {
-    id: 'encounter_marcus_corridor',
+
+  // --- Marcus T. Encounters ---
+  'encounter_marcus_corridor_a': {
+    id: 'encounter_marcus_corridor_a',
     locationId: 'corridor_a',
     type: 'warning',
     text: 'Marcus T. 魁梧的身影挡住了去路。他正在擦拭一根沉重的金属警棍，周围的空气似乎都凝固了。',
     actions: [
       { 
-        id: 'marcus_pay_toll', label: '交出一些配给额度 (支付钱财)', timeCost: 0.25, variant: 'default',
+        id: 'marcus_pay_toll', label: '交出一些积分 (10点)', timeCost: 0.25, variant: 'default',
         condition: (ctx) => ctx.game.game.money >= 10,
         effect: (ctx) => {
           ctx.game.game.money -= 10;
           ctx.npcs.interact('marcus', 10, 5);
           ctx.game.addLog('他接过额度卡，露出了一个令人不安的笑容。“聪明人的选择。现在，路是你的了。”', 'info');
         },
-        nextSceneId: 'explore_corridor'
+        nextSceneId: 'explore_corridor_a'
       },
       { 
         id: 'marcus_confront', label: '强行通过', timeCost: 0.5, variant: 'danger',
@@ -53,9 +56,33 @@ export const encounterPlots: Record<string, PlotScene> = {
           ctx.game.player.stats.hp -= 15;
           ctx.game.addLog('他没有说话，直接给了你一棍。剧痛从腹部蔓延，你只能狼狈地退后。', 'warning');
         },
-        nextSceneId: 'explore_corridor'
+        nextSceneId: 'explore_corridor_a'
+      }
+    ]
+  },
+
+  // --- Dr. Aris Encounters ---
+  'encounter_aris_med_bay': {
+    id: 'encounter_aris_med_bay',
+    locationId: 'med_bay',
+    type: 'story',
+    text: 'Dr. Aris 正在整理一堆散乱的药剂瓶。看到你进来，他显得有些手忙脚乱，下意识地遮住了身后的一个冷藏箱。',
+    actions: [
+      {
+        id: 'aris_ask_meds', label: '请求一些止痛药', timeCost: 0.5, variant: 'accent',
+        effect: (ctx) => {
+          if (ctx.npcs.npcs['aris'].trust > 40) {
+            ctx.game.addLog('他犹豫了一下，飞快地塞给你一个小瓶子。“拿走，别让守卫看见。”', 'info');
+            ctx.game.inventory.push({
+              id: 'painkillers', name: '止痛药', description: '虽然快过期了，但能缓解疼痛。', icon: 'pill', quantity: 1, category: 'consumable'
+            });
+          } else {
+            ctx.game.addLog('“规则不允许我私自发放物资，”他躲闪着你的目光，“请离开这里。”', 'info');
+            ctx.npcs.interact('aris', 2, 5);
+          }
+        },
+        nextSceneId: 'explore_med_bay'
       }
     ]
   }
-  // ... 更多偶遇可在此持续添加
 };

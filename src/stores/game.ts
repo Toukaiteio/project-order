@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia';
+import { useScheduleStore } from './schedule';
 
 export interface PlayerStats {
   hp: number;
@@ -92,14 +93,14 @@ export const useGameStore = defineStore('game', {
     inventory: [] as InventoryItem[],
     logs: [] as LogEntry[],
     mapNodes: [
-      { id: 'cell_01',    col: 2, row: 2, label: 'Cell 01', state: 'current', connections: ['corridor_a'] },
-      { id: 'corridor_a', col: 4, row: 2, label: 'Corridor Alpha', state: 'locked',  connections: ['cell_01', 'hall_main', 'cell_02'] },
-      { id: 'cell_02',    col: 4, row: 4, label: 'Cell 02', state: 'locked',  connections: ['corridor_a'] },
-      { id: 'hall_main',  col: 6, row: 2, label: 'The Atrium', state: 'locked',  connections: ['corridor_a', 'med_bay', 'mess_hall', 'warehouse_back'] },
-      { id: 'med_bay',    col: 6, row: 0, label: 'Medical Post', state: 'locked',  connections: ['hall_main'] },
-      { id: 'mess_hall',  col: 8, row: 2, label: 'Communal Mess', state: 'locked',  connections: ['hall_main', 'garbage_chute'] },
-      { id: 'garbage_chute', col: 10, row: 2, label: 'Disposal Area', state: 'locked',  connections: ['mess_hall'] },
-      { id: 'warehouse_back', col: 6, row: 4, label: 'Hidden Cache', state: 'locked',  connections: ['hall_main'] },
+      { id: 'cell_01',    col: 2, row: 2, label: '牢房 01', state: 'current', connections: ['corridor_a'] },
+      { id: 'corridor_a', col: 4, row: 2, label: '走廊 Alpha', state: 'locked',  connections: ['cell_01', 'hall_main', 'cell_02'] },
+      { id: 'cell_02',    col: 4, row: 4, label: '牢房 02', state: 'locked',  connections: ['corridor_a'] },
+      { id: 'hall_main',  col: 6, row: 2, label: '设施大厅', state: 'locked',  connections: ['corridor_a', 'med_bay', 'mess_hall', 'warehouse_back'] },
+      { id: 'med_bay',    col: 6, row: 0, label: '医疗站', state: 'locked',  connections: ['hall_main'] },
+      { id: 'mess_hall',  col: 8, row: 2, label: '公共食堂', state: 'locked',  connections: ['hall_main', 'garbage_chute'] },
+      { id: 'garbage_chute', col: 10, row: 2, label: '废料处理区', state: 'locked',  connections: ['mess_hall'] },
+      { id: 'warehouse_back', col: 6, row: 4, label: '秘密仓库', state: 'locked',  connections: ['hall_main'] },
     ] as MapNode[],
   }),
 
@@ -139,9 +140,33 @@ export const useGameStore = defineStore('game', {
 
     consumeTime(hours: number) {
       this.game.time += hours;
-      if (this.game.time >= 24) {
+      while (this.game.time >= 24) {
         this.game.time -= 24;
-        this.game.day  += 1;
+        this.advanceDay();
+      }
+    },
+
+    advanceDay() {
+      this.game.day += 1;
+      const scheduleStore = useScheduleStore();
+      const config = scheduleStore.getDayConfig(this.game.day);
+      
+      this.game.isRestDay = config.isRestDay;
+      if (config.weather) {
+        this.game.weather = config.weather;
+      } else {
+        const weathers: GameState['weather'][] = ['sunny', 'rainy', 'foggy'];
+        if (Math.random() < 0.2) {
+          this.game.weather = weathers[Math.floor(Math.random() * weathers.length)];
+        } else {
+          this.game.weather = 'sunny';
+        }
+      }
+
+      this.addLog(`新的一天开始了。今天是第 ${this.game.day} 天。`, 'info');
+      
+      if (config.mainPlotId) {
+        this.flags.pendingPlotId = config.mainPlotId;
       }
     },
 

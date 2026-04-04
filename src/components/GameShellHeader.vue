@@ -3,7 +3,7 @@
     <div class="hdr-day">
       <span class="hdr-day-num">D{{ game.day }}</span>
       <span :class="['hdr-phase', game.isRestDay ? 'phase-rest' : 'phase-game']">
-        {{ game.isRestDay ? '浼戞伅鏃?' : '娓告垙鏃?' }}
+        {{ game.isRestDay ? '休息日' : '游戏日' }}
       </span>
     </div>
 
@@ -12,7 +12,7 @@
         <Heart :size="13" class="vital-ico ico-hp" />
         <span class="vital-number">{{ player.stats.hp }}</span>
       </div>
-      <span class="hdr-vital-sep">路</span>
+      <span class="hdr-vital-sep">·</span>
       <div class="hdr-vital-pair">
         <Brain :size="13" class="vital-ico ico-san" />
         <span class="vital-number">{{ player.stats.sanity }}</span>

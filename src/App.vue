@@ -39,6 +39,7 @@
         :open="sidebarOpen"
         :player="player"
         :game="game"
+        :npcs="npcStore.npcs"
         @close="sidebarOpen = false"
       />
 
@@ -59,6 +60,7 @@ import { useGameShell } from './composables/useGameShell'
 
 const {
   dialogStore,
+  npcStore,
   executeAction,
   formattedTime,
   game,

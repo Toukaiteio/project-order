@@ -2,7 +2,7 @@
   <div :class="['tab-pane', { active }]">
     <div class="inv-pane">
       <div class="inv-toolbar">
-        <span class="inv-title">闅忚韩鐗╁搧</span>
+        <span class="inv-title">随身物品</span>
         <div class="inv-cap">
           <Package :size="12" />
           <span>{{ inventory.length }} / 18</span>
@@ -11,8 +11,8 @@
 
       <div v-if="!inventory.length" class="inv-empty">
         <Package :size="32" class="inv-empty-ico" />
-        <p class="inv-empty-text">鏆傛棤鐗╁搧</p>
-        <p class="inv-empty-sub">鎺㈢储鍖哄煙浠ヨ幏鍙栭亾鍏峰拰绾跨储</p>
+        <p class="inv-empty-text">暂无物品</p>
+        <p class="inv-empty-sub">探索区域以获取道具和线索</p>
       </div>
 
       <div v-else class="inv-list scrollbar-hide">
@@ -30,7 +30,7 @@
             <span class="ii-desc">{{ item.description }}</span>
           </div>
           <div class="ii-right">
-            <span v-if="item.quantity > 1" class="ii-qty">脳{{ item.quantity }}</span>
+            <span v-if="item.quantity > 1" class="ii-qty">×{{ item.quantity }}</span>
             <ChevronRight :size="14" class="ii-arrow" />
           </div>
         </div>
@@ -46,7 +46,7 @@
         <p class="idet-desc">{{ selectedItem.description }}</p>
       </div>
       <div v-else class="inv-detail inv-detail-empty">
-        <span>閫夋嫨鐗╁搧鏌ョ湅璇︽儏</span>
+        <span>选择物品查看详情</span>
       </div>
     </div>
   </div>

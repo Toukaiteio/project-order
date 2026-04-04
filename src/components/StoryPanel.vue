@@ -18,7 +18,7 @@
       <div class="story-inner">
         <div class="log-day-header">
           <span class="ldh-line"></span>
-          <span class="ldh-text">绗瑊{ day }}澶?{{ weatherName }}</span>
+          <span class="ldh-text">第 {{ day }} 天 {{ weatherName }}</span>
           <span class="ldh-line"></span>
         </div>
 
@@ -33,7 +33,7 @@
 
           <div v-else class="log-actions-entry">
             <div v-if="entry.resolvedId" class="la-resolved">
-              <span class="lar-arrow">鈥?</span>
+              <span class="lar-arrow">›</span>
               <span class="lar-label">{{ entry.resolvedLabel }}</span>
               <span class="lar-cost">
                 {{ entry.choices.find((choice) => choice.id === entry.resolvedId)?.timeCost }}h
@@ -43,7 +43,7 @@
             <template v-else>
               <div class="ia-divider">
                 <span class="ia-div-line"></span>
-                <span class="ia-div-label">鍙€夎鍔?</span>
+                <span class="ia-div-label">可选行动</span>
                 <span class="ia-div-line"></span>
               </div>
 

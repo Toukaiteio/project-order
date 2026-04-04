@@ -12,7 +12,7 @@ export const day01Plots: Record<string, PlotScene> = {
         condition: (ctx) => !ctx.game.flags.found_crumpled_note
       },
       { id: 'examine_wall', label: '检查墙壁', timeCost: 0.5, variant: 'default', nextSceneId: 'wall_scratches' },
-      { id: 'move_corridor', label: '走出牢房 (前往走廊)', timeCost: 0.25, variant: 'accent' },
+      { id: 'move_corridor_a', label: '走出牢房', timeCost: 0.25, variant: 'accent' },
     ]
   },
   'found_note': {
@@ -49,27 +49,7 @@ export const day01Plots: Record<string, PlotScene> = {
     text: '这些抓痕非常深，似乎是某人用指甲硬生生抠出来的。你隐约辨认出一个名字：“林...夕...”。这个名字让你感到莫名的心悸。',
     actions: [
       { id: 'ponder_name', label: '冥想这个名字', timeCost: 1.0, variant: 'accent', nextSceneId: 'awake' },
-      { id: 'move_corridor', label: '离开这里', timeCost: 0.25, variant: 'default' },
-    ]
-  },
-  'explore_corridor_a': {
-    id: 'explore_corridor_a',
-    locationId: 'corridor_a',
-    type: 'info',
-    text: '走廊里的灯光忽明忽暗，发出嘶嘶的电流声。两侧排列着更多的紧锁的金属门。空气中弥漫着消毒水的味道。',
-    actions: [
-      { id: 'move_hall', label: '前往大厅', timeCost: 0.5, variant: 'accent' },
-      { id: 'move_cell_01', label: '返回牢房', timeCost: 0.25, variant: 'default' },
-    ]
-  },
-  'explore_hall_main': {
-    id: 'explore_hall_main',
-    locationId: 'hall_main',
-    type: 'story',
-    text: '这是一个巨大的圆形空腔区域，高度足有三层。四周散布着一些破旧的塑料椅。这里是少数几个没有全天候强制照明的地方。',
-    actions: [
-      { id: 'move_corridor_a', label: '返回走廊', timeCost: 0.5, variant: 'default' },
-      { id: 'search_hall', label: '在大厅搜索', timeCost: 1.0, variant: 'default', nextSceneId: 'explore_hall_main' },
+      { id: 'move_corridor_a', label: '离开这里', timeCost: 0.25, variant: 'default' },
     ]
   }
 };

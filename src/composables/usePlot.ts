@@ -1,16 +1,18 @@
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useGameStore } from '../stores/game';
 import { useDialogStore } from '../stores/dialog';
 import { useNPCStore } from '../stores/npcs';
 import { useScheduleStore } from '../stores/schedule';
 import { day01Plots } from '../content/plots/day01';
 import { encounterPlots } from '../content/plots/encounters';
+import { locationExplorationPlots } from '../content/plots/locations';
 import type { PlotScene, PlotEffectContext } from '../types/plot';
 
 // 合并所有剧情脚本
 const ALL_PLOTS: Record<string, PlotScene> = {
   ...day01Plots,
   ...encounterPlots,
+  ...locationExplorationPlots,
 };
 
 export function usePlot() {
@@ -26,6 +28,14 @@ export function usePlot() {
     npcs: npcStore,
     schedule: scheduleStore,
   };
+
+  // 监听待处理剧情，实现跨天或事件自动触发
+  watch(() => gameStore.flags.pendingPlotId, (newPlotId) => {
+    if (newPlotId) {
+      triggerScene(newPlotId as string);
+      gameStore.flags.pendingPlotId = ''; 
+    }
+  });
 
   const currentScene = computed(() => ALL_PLOTS[currentSceneId.value]);
 
@@ -68,5 +78,6 @@ export function usePlot() {
     currentScene,
     triggerScene,
     handleAction,
+    checkSceneExists: (id: string) => !!ALL_PLOTS[id],
   };
 }

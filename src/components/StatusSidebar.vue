@@ -117,6 +117,27 @@
               </div>
             </div>
 
+            <!-- NPCs -->
+            <div v-if="metNPCs.length" class="sp-section">
+              <div class="sp-sec-label">已知幸存者</div>
+              <div class="sp-npc-list">
+                <div v-for="npc in metNPCs" :key="npc.id" class="sp-npc-card">
+                  <div class="snc-header">
+                    <span class="snc-name">{{ npc.name }}</span>
+                    <span class="snc-origin">{{ npc.originLabel }}</span>
+                  </div>
+                  <div class="snc-bars">
+                    <div class="snc-bar fav">
+                      <div class="sncb-fill" :style="{ width: ((npc.favorability + 100) / 2) + '%' }"></div>
+                    </div>
+                    <div class="snc-bar trust">
+                      <div class="sncb-fill" :style="{ width: npc.trust + '%' }"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <!-- Game Phase Info -->
             <div class="sp-section">
               <div class="sp-sec-label">当前状态</div>
@@ -151,13 +172,15 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Heart, Brain, Shield, BookOpen, Zap, DollarSign, User, X } from 'lucide-vue-next'
+import { Heart, Brain, Shield, BookOpen, Zap, DollarSign, User, X, Users } from 'lucide-vue-next'
 import type { PlayerStats, GameState } from '../stores/game'
+import type { NPC } from '../stores/npcs'
 
 const props = defineProps<{
   open: boolean
   player: { name: string; gender: string; stats: PlayerStats }
   game: GameState
+  npcs: Record<string, NPC>
 }>()
 
 const emit = defineEmits<{
@@ -178,6 +201,10 @@ const weatherName = computed(() => {
     sunny: '晴朗', rainy: '大雨', foggy: '浓雾', blood_mist: '血雾',
   }
   return map[props.game.weather] ?? '未知'
+})
+
+const metNPCs = computed(() => {
+  return Object.values(props.npcs).filter(n => n.met)
 })
 </script>
 
@@ -413,6 +440,62 @@ const weatherName = computed(() => {
 .sr-ico  { color: var(--accent-amber); flex-shrink: 0; }
 .sr-name { font-size: 0.78rem; color: var(--text-secondary); flex: 1; }
 .sr-val  { font-family: var(--font-mono); font-size: 0.9rem; font-weight: 600; color: var(--accent-amber); }
+
+/* ── NPC List ───────────────────────────────────── */
+.sp-npc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sp-npc-card {
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.snc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.snc-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.snc-origin {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.snc-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.snc-bar {
+  height: 2px;
+  background-color: var(--bg-tertiary);
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.snc-bar.fav .sncb-fill { background-color: var(--accent-primary); }
+.snc-bar.trust .sncb-fill { background-color: var(--accent-green); }
+
+.sncb-fill {
+  height: 100%;
+  transition: width 0.4s ease;
+}
 
 /* ── Info Grid ──────────────────────────────────── */
 .sp-info-grid {

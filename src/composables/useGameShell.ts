@@ -1,6 +1,7 @@
 import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useDialogStore } from '../stores/dialog'
+import { useNPCStore } from '../stores/npcs'
 import {
   type ActionChoice,
   type ActionsEntry,
@@ -20,15 +21,16 @@ import type { TabId } from '../constants/gameUi'
 export function useGameShell() {
   const gameStore = useGameStore()
   const dialogStore = useDialogStore()
+  const npcStore = useNPCStore()
   const { player, game, logs, inventory, mapNodes } = storeToRefs(gameStore)
-  const { triggerScene, handleAction } = usePlot()
+  const { triggerScene, handleAction, checkSceneExists } = usePlot()
 
   const tab = ref<TabId>('story')
   const sidebarOpen = ref(false)
   const selectedItem = ref<InventoryItem | null>(null)
 
   const formattedTime = computed(() => formatClockTime(game.value.time))
-  const weatherName = computed(() => WEATHER_NAMES[game.value.weather] ?? '鏈煡')
+  const weatherName = computed(() => WEATHER_NAMES[game.value.weather] ?? '未知')
   const weatherIcon = computed(() => resolveWeatherIcon(game.value.weather))
   const locationName = computed(() => LOCATION_NAMES[game.value.location] ?? game.value.location)
 
@@ -49,10 +51,21 @@ export function useGameShell() {
       const targetId = choice.id.replace('move_', '')
       gameStore.moveTo(targetId)
 
-      if (Math.random() < 0.3) {
-        if (targetId === 'hall_main') triggerScene('encounter_elena_hall')
-        else if (targetId === 'corridor_a') triggerScene('encounter_marcus_corridor')
-        else triggerScene(`explore_${targetId}`)
+      // 动态偶遇逻辑：检查当前区域有哪些 NPC
+      const npcsAtLocation = Object.values(npcStore.npcs).filter(
+        n => n.location === targetId && n.state === 'Alive'
+      )
+
+      // 40% 几率触发偶遇
+      if (npcsAtLocation.length > 0 && Math.random() < 0.4) {
+        const npc = npcsAtLocation[Math.floor(Math.random() * npcsAtLocation.length)]
+        const sceneId = `encounter_${npc.id}_${targetId}`
+
+        if (checkSceneExists(sceneId)) {
+          triggerScene(sceneId)
+        } else {
+          triggerScene(`explore_${targetId}`)
+        }
       } else {
         triggerScene(`explore_${targetId}`)
       }
@@ -74,6 +87,7 @@ export function useGameShell() {
 
   return {
     dialogStore,
+    npcStore,
     game,
     handleNavClick,
     inventory,
