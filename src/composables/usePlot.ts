@@ -4,6 +4,8 @@ import { useDialogStore } from '../stores/dialog';
 import { useNPCStore } from '../stores/npcs';
 import { useScheduleStore } from '../stores/schedule';
 import { day01Plots } from '../content/plots/day01';
+import { day05Plots } from '../content/plots/day05';
+import { day11Plots } from '../content/plots/day11';
 import { encounterPlots } from '../content/plots/encounters';
 import { locationExplorationPlots } from '../content/plots/locations';
 import type { PlotScene, PlotEffectContext } from '../types/plot';
@@ -11,6 +13,8 @@ import type { PlotScene, PlotEffectContext } from '../types/plot';
 // 合并所有剧情脚本
 const ALL_PLOTS: Record<string, PlotScene> = {
   ...day01Plots,
+  ...day05Plots,
+  ...day11Plots,
   ...encounterPlots,
   ...locationExplorationPlots,
 };

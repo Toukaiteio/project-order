@@ -90,7 +90,9 @@ export const useGameStore = defineStore('game', {
       money: 0,
     } as GameState,
     flags: {} as Record<string, boolean | number | string>,
-    inventory: [] as InventoryItem[],
+    inventory: [
+      { id: 'ration', name: '合成口粮', description: '一块硬得像石头的压缩饼干，能维持基本生命。', icon: 'package', quantity: 1, category: 'consumable' }
+    ] as InventoryItem[],
     logs: [] as LogEntry[],
     mapNodes: [
       { id: 'cell_01',    col: 2, row: 2, label: '牢房 01', state: 'current', connections: ['corridor_a'] },

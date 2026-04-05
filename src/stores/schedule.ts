@@ -12,8 +12,15 @@ export const useScheduleStore = defineStore('schedule', {
     // 90天日程映射表
     calendar: {
       1: { isRestDay: true, mainPlotId: 'awake', optionalHooks: [] },
-      2: { isRestDay: true, optionalHooks: ['first_encounter_elena'] },
+      2: { isRestDay: true, weather: 'foggy', optionalHooks: [] },
+      3: { isRestDay: true, optionalHooks: [] },
+      4: { isRestDay: true, optionalHooks: [] },
       5: { weather: 'rainy', isRestDay: true, mainPlotId: 'rainy_night_theft', optionalHooks: [] },
+      6: { isRestDay: true, optionalHooks: [] },
+      7: { isRestDay: true, weather: 'sunny', optionalHooks: [] },
+      8: { isRestDay: true, optionalHooks: [] },
+      9: { isRestDay: true, optionalHooks: [] },
+      10: { isRestDay: true, weather: 'foggy', optionalHooks: [] },
       11: { isRestDay: false, mainPlotId: 'game_01_dilemma', optionalHooks: [] },
       15: { isRestDay: false, mainPlotId: 'faction_split_vote', optionalHooks: [] },
       // 16-89天 可以在日后开发中动态补充

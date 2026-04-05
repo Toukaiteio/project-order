@@ -28,7 +28,7 @@ export const useNPCStore = defineStore('npcs', {
       'marcus': {
         id: 'marcus', name: 'Marcus T.', originLabel: '工业地带', role: '执法者',
         description: '这里的非官方头目，崇尚秩序，即便这种秩序是建立在恐惧之上的。',
-        favorability: -20, trust: 5, alignment: 'Lawful', state: 'Alive', met: true,
+        favorability: -20, trust: 5, alignment: 'Lawful', state: 'Alive', met: false,
         tags: ['强权', '武力'], location: 'corridor_a', metadata: { debt: 0 }
       },
       'aris': {

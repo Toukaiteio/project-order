@@ -39,22 +39,40 @@ export const locationExplorationPlots: Record<string, PlotScene> = {
     id: 'explore_med_bay',
     locationId: 'med_bay',
     type: 'info',
-    text: '医疗站。这里充满了刺鼻的漂白粉味，冰冷的金属手术台在昏暗的灯光下闪着寒光。',
+    text: 'Medical Post。这里充满了刺鼻的漂白粉味，冰冷的金属手术台在昏暗的灯光下闪着寒光。',
     actions: [
       { id: 'move_hall_main', label: '返回大厅', timeCost: 0.5, variant: 'default' },
-      { id: 'search_meds', label: '翻找医疗垃圾', timeCost: 1.0, variant: 'danger' },
+      { id: 'search_meds', label: '翻找医疗垃圾', timeCost: 1.0, variant: 'danger', 
+        effect: (ctx) => {
+          if (Math.random() < 0.2) {
+            ctx.game.addLog('你在废弃的针头堆里找到了一支尚未使用的肾上腺素。', 'info');
+            ctx.game.inventory.push({ id: 'adrenaline', name: '肾上腺素', description: '能在短时间内大幅提升爆发力。', icon: 'zap', quantity: 1, category: 'consumable' });
+          } else {
+            ctx.game.addLog('除了带血的棉球，你一无所获。', 'info');
+            ctx.game.player.stats.hp -= 2; // 被划伤
+          }
+        }
+      },
+      { id: 'observe_records', label: '偷看手术记录', timeCost: 0.5, variant: 'accent', condition: (ctx) => ctx.game.player.stats.intelligence >= 7 },
     ]
   },
   'explore_mess_hall': {
     id: 'explore_mess_hall',
     locationId: 'mess_hall',
     type: 'story',
-    text: '公共食堂。空气中弥漫着廉价合成蛋白的味道。',
+    text: 'Communal Mess。空气中弥漫着廉价合成蛋白的味道。',
     actions: [
       { id: 'move_hall_main', label: '返回大厅', timeCost: 0.5, variant: 'default' },
       { id: 'move_garbage_chute', label: '前往废料处理区', timeCost: 0.5, variant: 'default' },
+      { id: 'eavesdrop', label: '窃听他人的谈话', timeCost: 0.75, variant: 'accent', 
+        effect: (ctx) => {
+          ctx.game.addLog('你听到有人在低声谈论第15天的投票，似乎有几个扇区的人达成了某种私下交易。', 'info');
+          ctx.game.player.stats.intelligence += 1;
+        }
+      },
     ]
   },
+
   'explore_warehouse_back': {
     id: 'explore_warehouse_back',
     locationId: 'warehouse_back',

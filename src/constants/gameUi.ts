@@ -1,6 +1,7 @@
 import {
   BookOpen,
   Brain,
+  ChevronRight,
   CloudRain,
   Ear,
   Eye,
@@ -13,6 +14,7 @@ import {
   Sun,
   Users,
   Wind,
+  X,
 } from 'lucide-vue-next'
 import type { Component } from 'vue'
 
@@ -60,6 +62,20 @@ const ACTION_ICONS: Record<string, Component> = {
   marcus_confront: Skull,
   aris_ask_meds: Heart,
   search_hall: Eye,
+  search_scraps: Package,
+  search_meds: Skull,
+  observe_records: BookOpen,
+  eavesdrop: Ear,
+  pillage_box: Skull,
+  choice_cooperate: Users,
+  choice_betray: Skull,
+  continue: ChevronRight,
+  check_door: Eye,
+  pretend_sleep: Moon,
+  confront_sasha: Skull,
+  talk_to_sasha: MessageSquare,
+  give_ration: Package,
+  refuse_sasha: X,
 }
 
 export const WEATHER_NAMES: Record<string, string> = {

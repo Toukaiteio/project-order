@@ -65,43 +65,20 @@
 
             <!-- Attributes -->
             <div class="sp-section">
-              <div class="sp-sec-label">能力属性</div>
+              <div class="sp-sec-label">能力属性 (上限 100)</div>
               <div class="sp-attrs">
 
-                <div class="sp-attr-row">
-                  <Shield :size="13" class="sa-ico" />
-                  <span class="sa-name">力量</span>
-                  <div class="sa-pips">
-                    <span
-                      v-for="n in 10" :key="n"
-                      :class="['pip', { on: n <= player.stats.strength }]"
-                    ></span>
+                <div v-for="s in statsConfig" :key="s.id" class="sp-attr-row-new">
+                  <div class="san-header">
+                    <div class="san-label-group">
+                      <component :is="s.icon" :size="12" class="san-ico" />
+                      <span class="san-name">{{ s.label }}</span>
+                    </div>
+                    <span class="san-val">{{ player.stats[s.id] }}</span>
                   </div>
-                  <span class="sa-val">{{ player.stats.strength }}</span>
-                </div>
-
-                <div class="sp-attr-row">
-                  <BookOpen :size="13" class="sa-ico" />
-                  <span class="sa-name">智力</span>
-                  <div class="sa-pips">
-                    <span
-                      v-for="n in 10" :key="n"
-                      :class="['pip', { on: n <= player.stats.intelligence }]"
-                    ></span>
+                  <div class="san-bar-track">
+                    <div class="san-bar-fill" :style="{ width: player.stats[s.id] + '%' }"></div>
                   </div>
-                  <span class="sa-val">{{ player.stats.intelligence }}</span>
-                </div>
-
-                <div class="sp-attr-row">
-                  <Zap :size="13" class="sa-ico" />
-                  <span class="sa-name">敏捷</span>
-                  <div class="sa-pips">
-                    <span
-                      v-for="n in 10" :key="n"
-                      :class="['pip', { on: n <= player.stats.dexterity }]"
-                    ></span>
-                  </div>
-                  <span class="sa-val">{{ player.stats.dexterity }}</span>
                 </div>
 
               </div>
@@ -144,7 +121,7 @@
               <div class="sp-info-grid">
                 <div class="sp-info-cell">
                   <span class="sic-label">天数</span>
-                  <span class="sic-val">{{ game.day }} / 90</span>
+                  <span class="sic-val">{{ game.day }}</span>
                 </div>
                 <div class="sp-info-cell">
                   <span class="sic-label">时间</span>
@@ -206,6 +183,12 @@ const weatherName = computed(() => {
 const metNPCs = computed(() => {
   return Object.values(props.npcs).filter(n => n.met)
 })
+
+const statsConfig = [
+  { id: 'strength' as keyof PlayerStats, label: '力量', icon: Shield },
+  { id: 'intelligence' as keyof PlayerStats, label: '智力', icon: BookOpen },
+  { id: 'dexterity' as keyof PlayerStats, label: '敏捷', icon: Zap },
+]
 </script>
 
 <style scoped>
@@ -347,8 +330,6 @@ const metNPCs = computed(() => {
   line-height: 1;
 }
 
-.svc-bar-wrap {}
-
 .svc-bar-track {
   height: 4px;
   background-color: var(--bg-elevated);
@@ -389,44 +370,42 @@ const metNPCs = computed(() => {
   font-size: 0.62rem;
 }
 
-/* ── Attributes ─────────────────────────────────── */
-.sp-attrs {
+/* ── Attributes New Style ───────────────────────── */
+.sp-attr-row-new {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+  margin-bottom: 12px;
 }
 
-.sp-attr-row {
+.san-header {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 28px;
-}
-
-.sa-ico  { color: var(--text-muted); flex-shrink: 0; }
-.sa-name { font-size: 0.78rem; color: var(--text-secondary); min-width: 30px; flex-shrink: 0; }
-.sa-val  { font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-secondary); min-width: 14px; text-align: right; }
-
-.sa-pips {
-  flex: 1;
-  display: flex;
-  gap: 3px;
+  justify-content: space-between;
   align-items: center;
 }
 
-.pip {
-  flex: 1;
-  max-width: 16px;
-  height: 4px;
-  border-radius: 99px;
+.san-label-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.san-ico { color: var(--text-muted); }
+.san-name { font-size: 0.78rem; color: var(--text-secondary); }
+.san-val { font-family: var(--font-mono); font-size: 0.8rem; color: var(--accent-bright); font-weight: 600; }
+
+.san-bar-track {
+  height: 3px;
   background-color: var(--bg-elevated);
-  border: 1px solid var(--border-color);
-  transition: background-color 0.2s;
+  border-radius: 2px;
+  overflow: hidden;
 }
 
-.pip.on {
+.san-bar-fill {
+  height: 100%;
   background-color: var(--accent-primary);
-  border-color: transparent;
+  border-radius: 2px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ── Resources ──────────────────────────────────── */
