@@ -1,8 +1,18 @@
 <template>
-  <div class="game-root">
-    <CharacterCreation v-if="!game.started" @complete="onCreationComplete" />
+  <div :class="[
+    'game-root', 
+    { 'is-low-power': game.energy < 30 },
+    { 'is-insane': player.stats.sanity < 40 },
+    { 'is-critical-sanity': player.stats.sanity < 15 }
+  ]">
+    <!-- 主菜单 -->
+    <StartMenu v-if="mode === 'menu'" @action="handleMenuAction" />
 
-    <template v-else>
+    <!-- 角色创建 -->
+    <CharacterCreation v-else-if="mode === 'creation'" @complete="onCreationComplete" />
+
+    <!-- 游戏主体 -->
+    <template v-else-if="mode === 'playing'">
       <GameShellHeader
         :game="game"
         :player="player"
@@ -19,7 +29,9 @@
           :map-nodes="mapNodes"
           :weather-icon="weatherIcon"
           :weather-name="weatherName"
+          :combat="combat"
           @execute-action="executeAction"
+          @combat-action="handleCombatAction"
         />
 
         <InventoryPanel
@@ -50,6 +62,7 @@
 </template>
 
 <script setup lang="ts">
+import StartMenu from './views/StartMenu.vue'
 import CharacterCreation from './views/CharacterCreation.vue'
 import GameBottomNav from './components/GameBottomNav.vue'
 import GameDialogHost from './components/GameDialogHost.vue'
@@ -60,11 +73,15 @@ import StoryPanel from './components/StoryPanel.vue'
 import { useGameShell } from './composables/useGameShell'
 
 const {
+  mode,
   dialogStore,
   npcStore,
   executeAction,
+  handleMenuAction,
+  handleCombatAction,
   formattedTime,
   game,
+  combat,
   handleNavClick,
   inventory,
   locationName,

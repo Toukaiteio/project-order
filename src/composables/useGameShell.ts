@@ -18,13 +18,16 @@ import {
 } from '../constants/gameUi'
 import type { TabId } from '../constants/gameUi'
 
+export type GameMode = 'menu' | 'creation' | 'playing'
+
 export function useGameShell() {
   const gameStore = useGameStore()
   const dialogStore = useDialogStore()
   const npcStore = useNPCStore()
-  const { player, game, logs, inventory, mapNodes } = storeToRefs(gameStore)
+  const { player, game, logs, inventory, mapNodes, combat } = storeToRefs(gameStore)
   const { triggerScene, handleAction, checkSceneExists } = usePlot()
 
+  const mode = ref<GameMode>('menu')
   const tab = ref<TabId>('story')
   const sidebarOpen = ref(false)
   const selectedItem = ref<InventoryItem | null>(null)
@@ -39,7 +42,6 @@ export function useGameShell() {
       sidebarOpen.value = true
       return
     }
-
     tab.value = item.id as TabId
   }
 
@@ -51,58 +53,75 @@ export function useGameShell() {
       const targetId = choice.id.replace('move_', '')
       gameStore.moveTo(targetId)
 
-      // 动态偶遇逻辑：检查当前区域有哪些 NPC
+      // 动态偶遇
       const npcsAtLocation = Object.values(npcStore.npcs).filter(
         n => n.location === targetId && n.state === 'Alive'
       )
-
-      // 40% 几率触发偶遇
       if (npcsAtLocation.length > 0 && Math.random() < 0.4) {
         const npc = npcsAtLocation[Math.floor(Math.random() * npcsAtLocation.length)]
         const sceneId = `encounter_${npc.id}_${targetId}`
-
         if (checkSceneExists(sceneId)) {
-          triggerScene(sceneId)
-          return
+          triggerScene(sceneId); gameStore.saveGame(); return
         }
       }
 
-      // 特殊逻辑：低理智幻觉偶遇 (20% 几率，理智 < 40)
+      // 幻觉
       if (player.value.stats.sanity < 40 && Math.random() < 0.2) {
-        const hallucinations = [
-          'encounter_hallucination_ghost_girl',
-          'encounter_hallucination_shadow_vendor'
-        ].filter(id => checkSceneExists(id))
-        
-        if (hallucinations.length > 0) {
-          const sid = hallucinations[Math.floor(Math.random() * hallucinations.length)]
-          triggerScene(sid)
-          return
+        const halls = ['encounter_hallucination_ghost_girl', 'encounter_hallucination_shadow_vendor'].filter(id => checkSceneExists(id))
+        if (halls.length > 0) {
+          triggerScene(halls[Math.floor(Math.random() * halls.length)]); return
+        }
+      }
+
+      // 支线
+      if (Math.random() < 0.3) {
+        if (targetId === 'cell_02' && !gameStore.flags.satoshi_quest_active) {
+          triggerScene('quest_satoshi_start'); return
+        }
+        if (targetId === 'garbage_chute' && gameStore.flags.satoshi_quest_active && !gameStore.flags.has_satoshi_part) {
+          triggerScene('quest_satoshi_find_part'); return
+        }
+        if (targetId === 'med_bay' && gameStore.game.day > 11 && !gameStore.flags.aris_quest_done) {
+          triggerScene('quest_aris_plea'); gameStore.flags.aris_quest_done = true; return
         }
       }
 
       triggerScene(`explore_${targetId}`)
-
+      gameStore.saveGame()
       return
     }
 
     handleAction(choice.id)
+    gameStore.saveGame()
   }
 
-  const onCreationComplete = (data: any) => {
-    if (gameStore && typeof gameStore.startGame === 'function') {
-      gameStore.startGame(data)
-      triggerScene('awake')
-    } else {
-      console.error('gameStore.startGame is not a function!', gameStore)
+  const handleCombatAction = (type: 'atk' | 'def') => {
+    gameStore.processCombatTurn(type)
+    gameStore.saveGame()
+  }
+
+  const handleMenuAction = (type: 'new' | 'continue' | 'settings') => {
+    if (type === 'new') mode.value = 'creation'
+    else if (type === 'continue') {
+      if (gameStore.loadGame()) mode.value = 'playing'
     }
   }
 
+  const onCreationComplete = (data: any) => {
+    gameStore.startGame(data)
+    mode.value = 'playing'
+    triggerScene('awake')
+  }
+
   return {
+    mode,
     dialogStore,
     npcStore,
     game,
+    combat,
     handleNavClick,
+    handleMenuAction,
+    handleCombatAction,
     inventory,
     locationName,
     logs,

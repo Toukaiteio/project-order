@@ -30,11 +30,17 @@ export const locationExplorationPlots: Record<string, PlotScene> = {
     locationId: 'corridor_a',
     type: 'info',
     allowFieldRest: true,
-    text: '走廊 Alpha。灯光忽明忽暗，发出嘶嘶的电流声。两侧排列着更多的紧锁的金属门霸。空气中弥漫着消毒水的味道。',
+    text: '走廊 Alpha。灯光忽明忽暗，发出嘶嘶的电流声。两侧排列着更多的紧锁的金属门。空气中弥漫着消毒水的味道。',
     actions: [
       { id: 'move_hall_main', label: '前往设施大厅', timeCost: 0.25, variant: 'accent' },
       { id: 'move_cell_01', label: '返回牢房', timeCost: 0.25, variant: 'default' },
       { id: 'move_cell_02', label: '窥视相邻牢房', timeCost: 0.5, variant: 'default' },
+      { id: 'ask_about_facility_corridor', label: '询问路过的囚犯', timeCost: 0.5, variant: 'default',
+        effect: (ctx) => {
+          ctx.game.addLog('你拦住了一个匆匆走过的囚犯。他像看疯子一样看着你：“这里？这里是地狱，伙计。别挡路。”', 'warning');
+        },
+        nextSceneId: 'explore_corridor_a'
+      }
     ]
   },
   'explore_hall_main': {
@@ -48,6 +54,7 @@ export const locationExplorationPlots: Record<string, PlotScene> = {
       { id: 'move_med_bay', label: '前往医疗站', timeCost: 0.5, variant: 'accent' },
       { id: 'move_mess_hall', label: '前往公共食堂', timeCost: 0.5, variant: 'accent' },
       { id: 'move_warehouse_back', label: '潜入秘密仓库', timeCost: 0.75, variant: 'danger' },
+      { id: 'ask_about_facility_hall', label: '寻找 NPC 询问情报', timeCost: 0.5, variant: 'accent', nextSceneId: 'ask_about_facility' },
     ]
   },
   'explore_med_bay': {
@@ -84,8 +91,10 @@ export const locationExplorationPlots: Record<string, PlotScene> = {
         effect: (ctx) => {
           ctx.game.addLog('你听到有人在低声谈论第15天的投票，似乎有几个扇区的人达成了某种私下交易。', 'info');
           ctx.game.player.stats.intelligence += 1;
-        }
+        },
+        nextSceneId: 'explore_mess_hall'
       },
+      { id: 'ask_about_facility_mess', label: '打听设施的情况', timeCost: 0.5, variant: 'accent', nextSceneId: 'ask_about_facility' },
     ]
   },
 

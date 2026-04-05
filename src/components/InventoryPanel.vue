@@ -52,6 +52,13 @@
           >
             使用物品
           </button>
+          <button 
+            v-if="selectedItem.category === 'weapon'"
+            class="use-btn"
+            @click="handleUse"
+          >
+            装备武器
+          </button>
         </div>
       </div>
       <div v-else class="inv-detail inv-detail-empty">

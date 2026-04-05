@@ -8,9 +8,41 @@ import { day05Plots } from '../content/plots/day05';
 import { day11Plots } from '../content/plots/day11';
 import { day15Plots } from '../content/plots/day15';
 import { day20Plots } from '../content/plots/day20';
+import { day30Plots } from '../content/plots/day30';
+import { day45Plots } from '../content/plots/day45';
+import { day60Plots } from '../content/plots/day60';
+import { day75Plots } from '../content/plots/day75';
+import { day90Plots } from '../content/plots/day90';
+import { sideQuests } from '../content/plots/sidequests';
 import { encounterPlots } from '../content/plots/encounters';
 import { locationExplorationPlots } from '../content/plots/locations';
 import type { PlotScene, PlotEffectContext } from '../types/plot';
+
+const questioningPlots: Record<string, PlotScene> = {
+  'ask_about_facility': {
+    id: 'ask_about_facility',
+    locationId: 'hall_main',
+    type: 'story',
+    text: '你拦住了一名行色匆匆的囚犯，试图询问这里到底是什么地方。',
+    actions: [
+      { id: 'ask_marcus_about', label: '询问 Marcus', condition: (ctx) => ctx.game.game.location === 'hall_main', timeCost: 0.5, variant: 'accent',
+        effect: (ctx) => {
+          ctx.game.addLog('Marcus 嗤笑一声：“这里？这里是‘秩序之眼’，朋友。一个筛选优胜者的地方。至于外面？外面已经什么都不剩了。”', 'info');
+        },
+        nextSceneId: 'explore_hall_main'
+      },
+      { id: 'ask_sasha_about', label: '询问 Sasha', condition: (ctx) => ctx.game.game.location === 'mess_hall', timeCost: 0.5, variant: 'accent',
+        effect: (ctx) => {
+          ctx.game.addLog('Sasha 缩了缩脖子：“我不记得了……我只记得天空是红色的，到处都是火。他们说这里是唯一的避难所。”', 'warning');
+        },
+        nextSceneId: 'explore_mess_hall'
+      },
+      { id: 'back_to_explore', label: '放弃询问', timeCost: 0.1, variant: 'default',
+        nextSceneId: (ctx) => `explore_${ctx.game.game.location}` as any
+      }
+    ]
+  }
+};
 
 // 合并所有剧情脚本
 const ALL_PLOTS: Record<string, PlotScene> = {
@@ -19,8 +51,15 @@ const ALL_PLOTS: Record<string, PlotScene> = {
   ...day11Plots,
   ...day15Plots,
   ...day20Plots,
+  ...day30Plots,
+  ...day45Plots,
+  ...day60Plots,
+  ...day75Plots,
+  ...day90Plots,
+  ...sideQuests,
   ...encounterPlots,
   ...locationExplorationPlots,
+  ...questioningPlots,
 };
 
 export function usePlot() {
@@ -107,7 +146,8 @@ export function usePlot() {
 
     // 剧情跳转
     if (action.nextSceneId) {
-      triggerScene(action.nextSceneId);
+      const targetId = typeof action.nextSceneId === 'function' ? action.nextSceneId(context) : action.nextSceneId;
+      triggerScene(targetId as string);
     }
   };
 

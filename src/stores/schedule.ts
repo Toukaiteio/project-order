@@ -24,6 +24,10 @@ export const useScheduleStore = defineStore('schedule', {
       11: { isRestDay: false, mainPlotId: 'game_01_dilemma', optionalHooks: [] },
       15: { isRestDay: false, mainPlotId: 'faction_split_vote', optionalHooks: [] },
       20: { isRestDay: true, mainPlotId: 'aftermath_reaction', optionalHooks: [] },
+      30: { isRestDay: false, mainPlotId: 'game_02_death_race', optionalHooks: [] },
+      45: { isRestDay: false, mainPlotId: 'energy_crisis_start', optionalHooks: [] },
+      60: { isRestDay: false, mainPlotId: 'the_great_purge_start', optionalHooks: [] },
+      75: { isRestDay: false, mainPlotId: 'the_last_supper_start', optionalHooks: [] },
       // 16-89天 可以在日后开发中动态补充
       // 预留大规模留白区...
       90: { isRestDay: false, mainPlotId: 'grand_finale', optionalHooks: [] }

@@ -67,7 +67,6 @@
             <div class="sp-section">
               <div class="sp-sec-label">能力属性 (上限 100)</div>
               <div class="sp-attrs">
-
                 <div v-for="s in statsConfig" :key="s.id" class="sp-attr-row-new">
                   <div class="san-header">
                     <div class="san-label-group">
@@ -80,7 +79,6 @@
                     <div class="san-bar-fill" :style="{ width: player.stats[s.id] + '%' }"></div>
                   </div>
                 </div>
-
               </div>
             </div>
 
@@ -91,6 +89,18 @@
                 <DollarSign :size="13" class="sr-ico" />
                 <span class="sr-name">积分</span>
                 <span class="sr-val">{{ game.money }}</span>
+              </div>
+              <div class="sp-res-row mt-8">
+                <Zap :size="13" class="sr-ico-zap" />
+                <span class="sr-name">设施电力</span>
+                <span class="sr-val-zap">{{ game.energy }}%</span>
+              </div>
+              <div v-if="player.equippedWeapon" class="sp-res-row mt-8">
+                <Shield :size="13" class="sr-ico" style="color: var(--accent-bright)" />
+                <span class="sr-name" style="color: var(--accent-bright)">当前装备</span>
+                <span class="sr-val" style="color: var(--accent-bright); font-size: 0.75rem;">
+                  {{ getWeaponName(player.equippedWeapon) }}
+                </span>
               </div>
             </div>
 
@@ -183,6 +193,11 @@ const weatherName = computed(() => {
 const metNPCs = computed(() => {
   return Object.values(props.npcs).filter(n => n.met)
 })
+
+const getWeaponName = (id: string) => {
+  if (id === 'iron_pipe') return '生锈的铁管';
+  return id;
+}
 
 const statsConfig = [
   { id: 'strength' as keyof PlayerStats, label: '力量', icon: Shield },
@@ -417,8 +432,12 @@ const statsConfig = [
 }
 
 .sr-ico  { color: var(--accent-amber); flex-shrink: 0; }
+.sr-ico-zap { color: var(--accent-bright); flex-shrink: 0; }
 .sr-name { font-size: 0.78rem; color: var(--text-secondary); flex: 1; }
 .sr-val  { font-family: var(--font-mono); font-size: 0.9rem; font-weight: 600; color: var(--accent-amber); }
+.sr-val-zap { font-family: var(--font-mono); font-size: 0.9rem; font-weight: 600; color: var(--accent-bright); }
+
+.mt-8 { margin-top: 8px; }
 
 /* ── NPC List ───────────────────────────────────── */
 .sp-npc-list {

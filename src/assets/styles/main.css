@@ -99,6 +99,51 @@
   --font-family:    var(--font-ui);
 }
 
+/* ── 环境氛围特效 ── */
+.game-root.is-low-power {
+  background-color: #020406 !important;
+  filter: contrast(1.1) brightness(0.8);
+}
+
+.game-root.is-low-power::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: rgba(184, 50, 40, 0.03);
+  pointer-events: none;
+  animation: alarm-pulse 4s infinite;
+  z-index: 999;
+}
+
+@keyframes alarm-pulse {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 1; }
+}
+
+.game-root.is-insane {
+  filter: sepia(0.2) saturate(1.2);
+}
+
+.game-root.is-insane .g-main {
+  animation: sanity-shake 10s infinite;
+}
+
+@keyframes sanity-shake {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  25% { transform: translate(1px, 1px) rotate(0.1deg); }
+  50% { transform: translate(-1px, 0px) rotate(-0.1deg); filter: blur(0.5px); }
+  75% { transform: translate(1px, -1px) rotate(0.1deg); }
+}
+
+.game-root.is-critical-sanity::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle, transparent 40%, rgba(0,0,0,0.8) 150%);
+  pointer-events: none;
+  z-index: 998;
+}
+
 /* ────────────────────────────────────────── */
 /*  Base Reset                                */
 /* ────────────────────────────────────────── */
