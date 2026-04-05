@@ -12,8 +12,8 @@ export const useScheduleStore = defineStore('schedule', {
     // 90天日程映射表
     calendar: {
       1: { isRestDay: true, mainPlotId: 'awake', optionalHooks: [] },
-      2: { isRestDay: true, weather: 'foggy', optionalHooks: [] },
-      3: { isRestDay: true, optionalHooks: [] },
+      2: { isRestDay: true, mainPlotId: 'daily_inspection', weather: 'foggy', optionalHooks: [] },
+      3: { isRestDay: true, mainPlotId: 'blood_dusk_riot', optionalHooks: [] },
       4: { isRestDay: true, optionalHooks: [] },
       5: { weather: 'rainy', isRestDay: true, mainPlotId: 'rainy_night_theft', optionalHooks: [] },
       6: { isRestDay: true, optionalHooks: [] },

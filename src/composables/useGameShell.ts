@@ -53,8 +53,16 @@ export function useGameShell() {
       const targetId = choice.id.replace('move_', '')
       gameStore.moveTo(targetId)
 
-      // --- 1. 确定性剧情触发 (任务目标/交付) ---
+      // --- 1. 确定性剧情与伙伴逻辑 ---
       
+      // 检查探索度并触发伙伴登场
+      const initialLocations = ['cell_01', 'corridor_a', 'hall_main', 'med_bay', 'mess_hall', 'garbage_chute', 'cell_02'];
+      const exploredCount = gameStore.flags.exploredLocations.filter((l: string) => initialLocations.includes(l)).length;
+      
+      if (targetId === 'cell_01' && exploredCount >= 6 && !gameStore.flags.companion_met) {
+        triggerScene('companion_intro'); return;
+      }
+
       // Satoshi 任务: 寻找零件
       if (targetId === 'garbage_chute' && gameStore.flags.satoshi_quest_active && !gameStore.flags.has_satoshi_part) {
         triggerScene('quest_satoshi_find_part'); return
@@ -66,7 +74,6 @@ export function useGameShell() {
 
       // --- 2. 概率性剧情触发 (偶遇/幻觉/支线开启) ---
       
-      // 动态偶遇 NPC
       const npcsAtLocation = Object.values(npcStore.npcs).filter(
         n => n.location === targetId && n.state === 'Alive'
       )
@@ -78,7 +85,6 @@ export function useGameShell() {
         }
       }
 
-      // 幻觉触发 (低理智)
       if (player.value.stats.sanity < 40 && Math.random() < 0.2) {
         const halls = ['encounter_hallucination_ghost_girl', 'encounter_hallucination_shadow_vendor'].filter(id => checkSceneExists(id))
         if (halls.length > 0) {
@@ -86,7 +92,6 @@ export function useGameShell() {
         }
       }
 
-      // 随机开启新支线
       if (Math.random() < 0.3) {
         if (targetId === 'cell_02' && !gameStore.flags.satoshi_quest_active) {
           triggerScene('quest_satoshi_start'); return
@@ -96,7 +101,6 @@ export function useGameShell() {
         }
       }
 
-      // --- 3. 默认探索场景 ---
       triggerScene(`explore_${targetId}`)
       gameStore.saveGame()
       return

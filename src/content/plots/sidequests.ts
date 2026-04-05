@@ -10,7 +10,11 @@ export const sideQuests: Record<string, PlotScene> = {
     actions: [
       { 
         id: 'accept_satoshi', label: '答应帮他寻找', timeCost: 0.5, variant: 'accent',
-        effect: (ctx) => { ctx.game.flags.satoshi_quest_active = true; ctx.game.addLog('你接下了 Satoshi 的请求。', 'info'); },
+        effect: (ctx) => { 
+          ctx.game.flags.satoshi_quest_active = true; 
+          ctx.game.addLog('你接下了 Satoshi 的请求。', 'info'); 
+          ctx.game.setObjective('前往废料处理区寻找零件');
+        },
         nextSceneId: 'explore_cell_02'
       },
       { id: 'refuse_satoshi', label: '没空管闲事', timeCost: 0.25, variant: 'default', nextSceneId: 'explore_cell_02' }
@@ -29,6 +33,7 @@ export const sideQuests: Record<string, PlotScene> = {
           ctx.game.inventory.push({ id: 'electronic_part', name: '电子零件', description: '虽然沾满了油污，但依然在运作。', icon: 'zap', quantity: 1, category: 'tool' });
           ctx.game.flags.has_satoshi_part = true;
           ctx.game.addLog('你成功拿到了零件！', 'info');
+          ctx.game.setObjective('将零件带回给 Satoshi');
         },
         nextSceneId: 'explore_garbage_chute'
       },
@@ -47,8 +52,47 @@ export const sideQuests: Record<string, PlotScene> = {
           ctx.game.player.stats.intelligence += 5;
           ctx.game.flags.satoshi_allied = true;
           ctx.game.addLog('通过终端，你听到了管理区的一些杂音……他们似乎在谈论某种“进化指标”。', 'story');
+          ctx.game.setObjective('在生存中寻找真相');
         },
         nextSceneId: 'explore_cell_02'
+      }
+    ]
+  },
+
+  // --- Sasha P. 支线: 丢失的吊坠 ---
+  'quest_sasha_locket_start': {
+    id: 'quest_sasha_locket_start',
+    locationId: 'corridor_a',
+    type: 'story',
+    text: '你看到 Sasha 正蹲在墙角小声啜泣。几个高大的囚犯刚刚哄笑着离开。她抬起红肿的眼睛，“他们……他们把我的吊坠抢走扔进垃圾槽了。那是我唯一的家人照片……”',
+    actions: [
+      { 
+        id: 'accept_sasha_locket', label: '帮她找回来', timeCost: 0.5, variant: 'accent',
+        effect: (ctx) => {
+          ctx.game.flags.sasha_locket_active = true;
+          ctx.game.addLog('你决定帮这个可怜的女孩找回她的吊坠。', 'info');
+          ctx.game.setObjective('在废料处理区寻找吊坠');
+        },
+        nextSceneId: 'explore_corridor_a'
+      },
+      { id: 'ignore_sasha_locket', label: '视而不见', timeCost: 0.1, variant: 'default', nextSceneId: 'explore_corridor_a' }
+    ]
+  },
+  'quest_sasha_locket_find': {
+    id: 'quest_sasha_locket_find',
+    locationId: 'garbage_chute',
+    type: 'warning',
+    text: '你在恶心的废料堆里翻找。终于，在一个破旧的滤网下，你看到了一抹金属光泽。',
+    actions: [
+      {
+        id: 'pick_up_locket', label: '捡起吊坠', timeCost: 1.0, variant: 'accent',
+        effect: (ctx) => {
+          ctx.game.inventory.push({ id: 'sasha_locket', name: '银色吊坠', description: '里面有一张模糊的全家福。', icon: 'image', quantity: 1, category: 'misc' });
+          ctx.game.flags.has_sasha_locket = true;
+          ctx.game.addLog('你忍着恶臭捡起了吊坠。', 'info');
+          ctx.game.setObjective('将吊坠还给 Sasha');
+        },
+        nextSceneId: 'explore_garbage_chute'
       }
     ]
   },

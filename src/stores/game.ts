@@ -37,6 +37,7 @@ export interface GameState {
   location: string;
   money: number;
   energy: number;
+  objective: string;
 }
 
 export interface MapNode {
@@ -109,6 +110,7 @@ export const useGameStore = defineStore('game', {
       location: 'cell_01',
       money: 0,
       energy: 100,
+      objective: '醒来，活下去',
     } as GameState,
     combat: {
       active: false,
@@ -120,10 +122,11 @@ export const useGameStore = defineStore('game', {
     } as CombatState,
     flags: {
       hoursSinceLastRest: 0,
+      exploredLocations: ['cell_01'] as string[], // 新增: 探索过的位置
     } as Record<string, any>,
     inventory: [
-      { id: 'ration', name: '合成口粮', description: '一块硬得像石头的压缩饼干，能维持基本生命。', icon: 'package', quantity: 1, category: 'consumable' },
-      { id: 'iron_pipe', name: '生锈的铁管', description: '从床板上拆下来的铁管，可以作为防身武器。附加伤害: 10', icon: 'zap', quantity: 1, category: 'weapon', damage: 10 }
+      { id: 'ration', name: '合成口粮', description: '一块硬得像石头的压缩饼干。', icon: 'package', quantity: 1, category: 'consumable' },
+      { id: 'iron_pipe', name: '生锈的铁管', description: '虽然简陋但致命。', icon: 'zap', quantity: 1, category: 'weapon', damage: 10 }
     ] as InventoryItem[],
     logs: [] as LogEntry[],
     mapNodes: [
@@ -146,8 +149,14 @@ export const useGameStore = defineStore('game', {
       this.player.stats = { ...playerData.stats };
       this.game.started = true;
       this.game.energy = 100;
+      this.game.objective = '探索周围的环境';
       this.flags.hoursSinceLastRest = 0;
+      this.flags.exploredLocations = ['cell_01'];
       this.addLog(`你在铁锈味中醒来，记忆的碎片拼凑出你的身份：${this.player.name}。`, 'story');
+    },
+
+    setObjective(text: string) {
+      this.game.objective = text;
     },
 
     addLog(text: string, type: NarrativeEntry['type'] = 'info') {
@@ -223,7 +232,14 @@ export const useGameStore = defineStore('game', {
       const prev = this.mapNodes.find(n => n.id === this.game.location);
       if (prev?.state === 'current') prev.state = 'visited';
       const next = this.mapNodes.find(n => n.id === nodeId);
-      if (next) { next.state = 'current'; this.game.location = nodeId; }
+      if (next) { 
+        next.state = 'current'; 
+        this.game.location = nodeId; 
+        // 记录探索
+        if (!this.flags.exploredLocations.includes(nodeId)) {
+          this.flags.exploredLocations.push(nodeId);
+        }
+      }
     },
 
     enterCombat(enemyName: string, hp: number, atk: number) {

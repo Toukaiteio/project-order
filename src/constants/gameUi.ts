@@ -1,27 +1,28 @@
 import {
-  BookOpen,
-  Brain,
-  ChevronRight,
-  CloudRain,
-  Ear,
-  Eye,
-  Heart,
-  MessageSquare,
-  Moon,
   Navigation,
+  Moon,
+  Search,
+  Eye,
+  Zap,
+  Ear,
+  MapPin,
+  ChevronRight,
+  MessageSquare,
   Package,
-  Skull,
-  Sun,
+  BookOpen,
   Users,
-  Wind,
-  X,
+  Shield,
+  Plus,
+  Image,
+  Target,
+  Clock,
 } from 'lucide-vue-next'
 import type { Component } from 'vue'
 
-export type TabId = 'story' | 'inventory'
+export type TabId = 'story' | 'inventory' | 'status'
 
 export interface NavItem {
-  id: TabId | 'status'
+  id: TabId
   label: string
   icon: Component
   sidebar: boolean
@@ -36,48 +37,36 @@ export const NAV_ITEMS: NavItem[] = [
 const ACTION_ICONS: Record<string, Component> = {
   explore: Navigation,
   rest: Moon,
-  shout: MessageSquare,
-  investigate: Skull,
-  search_bed: Navigation,
-  examine_wall: Eye,
-  shout_help: MessageSquare,
-  keep_note: Package,
-  tear_note: Skull,
-  ponder_name: Brain,
-  ignore_name: Moon,
-  listen_carefully: Ear,
-  back_to_bed: Moon,
-  hide_corner: Wind,
-  confront: Skull,
-  move_corridor_a: Navigation,
-  move_hall_main: Navigation,
-  move_med_bay: Navigation,
-  move_mess_hall: Navigation,
-  move_warehouse_back: Navigation,
-  move_garbage_chute: Navigation,
-  move_cell_01: Navigation,
-  elena_ask_plan: MessageSquare,
-  elena_offer_help: Users,
-  marcus_pay_toll: Package,
-  marcus_confront: Skull,
-  aris_ask_meds: Heart,
-  search_hall: Eye,
-  search_scraps: Package,
-  search_meds: Skull,
-  observe_records: BookOpen,
+  search: Search,
+  examine: Eye,
+  move: ChevronRight,
+  train: Zap,
   eavesdrop: Ear,
-  pillage_box: Skull,
-  whisper_wall: MessageSquare,
-  stare_drain: Eye,
-  choice_cooperate: Users,
-  choice_betray: Skull,
-  continue: ChevronRight,
-  check_door: Eye,
-  pretend_sleep: Moon,
-  confront_sasha: Skull,
-  talk_to_sasha: MessageSquare,
-  give_ration: Package,
-  refuse_sasha: X,
+  ask: MessageSquare,
+  talk: MessageSquare,
+  interact: Users,
+  grab: Zap,
+  pick: Plus,
+  buy: Package,
+  attack: Shield,
+}
+
+export const resolveActionIcon = (actionId: string): Component => {
+  for (const [key, icon] of Object.entries(ACTION_ICONS)) {
+    if (actionId.toLowerCase().includes(key)) return icon
+  }
+  return ChevronRight
+}
+
+export const LOCATION_NAMES: Record<string, string> = {
+  cell_01: '牢房 01',
+  cell_02: '牢房 02',
+  corridor_a: '走廊 Alpha',
+  hall_main: '设施大厅',
+  med_bay: '医疗站',
+  mess_hall: '公共食堂',
+  garbage_chute: '废料处理区',
+  warehouse_back: '秘密仓库',
 }
 
 export const WEATHER_NAMES: Record<string, string> = {
@@ -87,34 +76,36 @@ export const WEATHER_NAMES: Record<string, string> = {
   blood_mist: '血雾',
 }
 
-export const LOCATION_NAMES: Record<string, string> = {
-  cell_01: '牢房 01',
-  corridor_a: '走廊 Alpha',
-  cell_02: '牢房 02',
-  hall_main: '设施大厅',
-  med_bay: '医疗站',
-  mess_hall: '公共食堂',
-  warehouse_back: '秘密仓库',
-  garbage_chute: '废料处理区',
+export const resolveWeatherIcon = (weather: string): Component => {
+  return Clock // 占位
 }
 
-export function formatClockTime(value: number) {
-  const h = Math.floor(value).toString().padStart(2, '0')
-  const m = Math.floor((value % 1) * 60).toString().padStart(2, '0')
+/**
+ * 格式化持续时间 (小时 -> xxhxxm)
+ */
+export const formatDuration = (hours: number): string => {
+  const h = Math.floor(hours);
+  const m = Math.round((hours - h) * 60);
+  if (h === 0) return `${m}m`;
+  if (m === 0) return `${h}h`;
+  return `${h}h${m.toString().padStart(2, '0')}m`;
+}
+
+/**
+ * 格式化日志时间 (毫秒 -> hh:mm)
+ */
+export const formatLogTime = (timestamp: number): string => {
+  const date = new Date(timestamp)
+  return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`
+}
+
+/**
+ * 格式化游戏内时钟 (0-24 -> hh:mm)
+ */
+export const formatClockTime = (gameTime: number): string => {
+  const h = Math.floor(gameTime).toString().padStart(2, '0')
+  const m = Math.floor((gameTime % 1) * 60)
+    .toString()
+    .padStart(2, '0')
   return `${h}:${m}`
-}
-
-export function formatLogTime(ts: number) {
-  const d = new Date(ts)
-  return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`
-}
-
-export function resolveWeatherIcon(weather: string) {
-  if (weather === 'rainy') return CloudRain
-  if (weather === 'foggy') return Wind
-  return Sun
-}
-
-export function resolveActionIcon(actionId: string) {
-  return ACTION_ICONS[actionId] ?? Navigation
 }

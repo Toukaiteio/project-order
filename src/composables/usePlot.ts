@@ -4,6 +4,8 @@ import { useDialogStore } from '../stores/dialog';
 import { useNPCStore } from '../stores/npcs';
 import { useScheduleStore } from '../stores/schedule';
 import { day01Plots } from '../content/plots/day01';
+import { day02Plots } from '../content/plots/day02';
+import { day03Plots } from '../content/plots/day03';
 import { day05Plots } from '../content/plots/day05';
 import { day11Plots } from '../content/plots/day11';
 import { day15Plots } from '../content/plots/day15';
@@ -13,6 +15,10 @@ import { day45Plots } from '../content/plots/day45';
 import { day60Plots } from '../content/plots/day60';
 import { day75Plots } from '../content/plots/day75';
 import { day90Plots } from '../content/plots/day90';
+import { companionPlots } from '../content/plots/companion';
+import { trainingPlots } from '../content/plots/training';
+import { npcInteractionPlots } from '../content/plots/npc_interaction';
+import { systemPlots } from '../content/plots/system_actions';
 import { sideQuests } from '../content/plots/sidequests';
 import { encounterPlots } from '../content/plots/encounters';
 import { locationExplorationPlots } from '../content/plots/locations';
@@ -27,13 +33,13 @@ const questioningPlots: Record<string, PlotScene> = {
     actions: [
       { id: 'ask_marcus_about', label: '询问 Marcus', condition: (ctx) => ctx.game.game.location === 'hall_main', timeCost: 0.5, variant: 'accent',
         effect: (ctx) => {
-          ctx.game.addLog('Marcus 嗤笑一声：“这里？这里是‘秩序之眼’，朋友。一个筛选优胜者的地方。至于外面？外面已经什么都不剩了。”', 'info');
+          ctx.game.addLog('Marcus 嗤笑一声：“这里？这里是‘秩序之眼’，朋友。”', 'info');
         },
         nextSceneId: 'explore_hall_main'
       },
       { id: 'ask_sasha_about', label: '询问 Sasha', condition: (ctx) => ctx.game.game.location === 'mess_hall', timeCost: 0.5, variant: 'accent',
         effect: (ctx) => {
-          ctx.game.addLog('Sasha 缩了缩脖子：“我不记得了……我只记得天空是红色的，到处都是火。他们说这里是唯一的避难所。”', 'warning');
+          ctx.game.addLog('Sasha 缩了缩脖子：“我不记得了……我只记得天空是红色的。”', 'warning');
         },
         nextSceneId: 'explore_mess_hall'
       },
@@ -47,6 +53,8 @@ const questioningPlots: Record<string, PlotScene> = {
 // 合并所有剧情脚本
 const ALL_PLOTS: Record<string, PlotScene> = {
   ...day01Plots,
+  ...day02Plots,
+  ...day03Plots,
   ...day05Plots,
   ...day11Plots,
   ...day15Plots,
@@ -56,6 +64,10 @@ const ALL_PLOTS: Record<string, PlotScene> = {
   ...day60Plots,
   ...day75Plots,
   ...day90Plots,
+  ...companionPlots,
+  ...trainingPlots,
+  ...npcInteractionPlots,
+  ...systemPlots,
   ...sideQuests,
   ...encounterPlots,
   ...locationExplorationPlots,
@@ -102,32 +114,33 @@ export function usePlot() {
     // 更新可用行动
     const validActions = [...scene.actions.filter(a => !a.condition || a.condition(context))];
     
-    // 如果场景允许原地休息，则注入一个特殊的“原地休息”行动
+    // 注入原地休息逻辑 -> 现在统一指向 rest_menu
     if (scene.allowFieldRest) {
       validActions.push({
-        id: 'field_rest',
-        label: '原地休息 (风险)',
-        timeCost: 1.5,
-        variant: 'danger',
-        effect: (ctx) => {
-          ctx.game.flags.hoursSinceLastRest = 0;
-          ctx.game.player.stats.sanity = Math.min(ctx.game.player.stats.maxSanity, ctx.game.player.stats.sanity + 5);
-          
-          const roll = Math.random();
-          if (roll < 0.3) {
-            ctx.game.addLog('你在不安中打了个盹。虽然还是很累，但神智清醒了一些。', 'info');
-          } else if (roll < 0.6) {
-            ctx.game.addLog('你刚闭上眼，就感到有人在翻动你的口袋！', 'warning');
-            const lost = Math.min(ctx.game.game.money, 20);
-            ctx.game.game.money -= lost;
-            ctx.game.addLog(`你失去了 ${lost} 积分。`, 'danger');
-          } else if (roll < 0.85) {
-            ctx.game.player.stats.hp -= 10;
-            ctx.game.addLog('某种冰冷的东西划过了你的手臂。当你惊醒时，只看到黑暗中一双逃离的脚步。', 'danger');
-          } else {
-            ctx.game.addLog('你陷入了可怕的噩梦。梦中，你看到自己正一点点变成设施墙壁上的污渍。', 'warning');
-            ctx.game.player.stats.sanity -= 15;
-          }
+        id: 'field_rest_entry', label: '原地休息 (风险)', timeCost: 0.1, variant: 'danger',
+        nextSceneId: 'rest_menu'
+      });
+    }
+
+    // --- 动态 NPC 交互注入 ---
+    if (sceneId !== 'npc_menu_general' && sceneId !== 'rest_menu') {
+      const currentLoc = gameStore.game.location;
+      const npcsHere = Object.values(npcStore.npcs).filter(n => 
+        n.location === currentLoc && n.state === 'Alive' && n.met === true
+      );
+      
+      npcsHere.forEach(npc => {
+        if (!validActions.some(a => a.id === `interact_${npc.id}`)) {
+          validActions.push({
+            id: `interact_${npc.id}`,
+            label: `与 ${npc.name} 互动`,
+            timeCost: 0.1,
+            variant: 'accent',
+            effect: (ctx) => {
+              ctx.game.flags.interacting_npc_id = npc.id;
+            },
+            nextSceneId: 'npc_menu_general'
+          });
         }
       });
     }
@@ -137,14 +150,9 @@ export function usePlot() {
 
   const handleAction = (choiceId: string) => {
     if (!currentScene.value) return;
-
     const action = currentScene.value.actions.find(a => a.id === choiceId);
     if (!action) return;
-
-    // 执行效果
     if (action.effect) action.effect(context);
-
-    // 剧情跳转
     if (action.nextSceneId) {
       const targetId = typeof action.nextSceneId === 'function' ? action.nextSceneId(context) : action.nextSceneId;
       triggerScene(targetId as string);

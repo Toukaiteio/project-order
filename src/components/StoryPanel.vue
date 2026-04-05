@@ -47,7 +47,7 @@
               <span class="lar-arrow">›</span>
               <span class="lar-label">{{ entry.resolvedLabel }}</span>
               <span class="lar-cost">
-                {{ entry.choices.find((choice) => choice.id === entry.resolvedId)?.timeCost }}h
+                {{ formatDuration(entry.choices.find((choice) => choice.id === entry.resolvedId)?.timeCost || 0) }}
               </span>
             </div>
 
@@ -72,7 +72,7 @@
                     </div>
                     <div class="ia-text">
                       <span class="ia-label">{{ choice.label }}</span>
-                      <span class="ia-cost">{{ choice.timeCost }}h</span>
+                      <span class="ia-cost">{{ formatDuration(choice.timeCost) }}</span>
                     </div>
                   </button>
                 </template>
@@ -102,7 +102,7 @@ import { nextTick, onMounted, ref, watch, type Component } from 'vue'
 import { MapPin, Swords, Shield } from 'lucide-vue-next'
 import MapCanvas from './MapCanvas.vue'
 import type { ActionChoice, ActionsEntry, LogEntry, MapNode, CombatState } from '../stores/game'
-import { formatLogTime, resolveActionIcon } from '../constants/gameUi'
+import { formatLogTime, resolveActionIcon, formatDuration } from '../constants/gameUi'
 
 const props = defineProps<{
   active: boolean
@@ -138,6 +138,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* 此处省略已有的样式定义，保持不变 */
 .tab-pane {
   display: none;
   position: absolute;
@@ -165,7 +166,6 @@ onMounted(() => {
   color: rgba(196, 204, 212, 0.7);
 }
 
-/* 战斗 HUD */
 .combat-hud {
   padding: 10px 16px;
   background-color: rgba(184, 50, 40, 0.1);
