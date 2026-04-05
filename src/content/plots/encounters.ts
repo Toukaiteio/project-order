@@ -1,7 +1,7 @@
 import type { PlotScene } from '../../types/plot';
 
 export const encounterPlots: Record<string, PlotScene> = {
-  // --- Elena V. Encounters ---
+  // --- Elena V. 偶遇 ---
   'encounter_elena_hall_main': {
     id: 'encounter_elena_hall_main',
     locationId: 'hall_main',
@@ -17,7 +17,7 @@ export const encounterPlots: Record<string, PlotScene> = {
           ctx.npcs.interact('elena', 5, 2);
           ctx.game.addLog('“我在计算死亡的概率，”她面无表情地回答，“顺便看看谁会是下一个被送进‘回收槽’的倒霉蛋。”', 'story');
         },
-        nextSceneId: 'explore_hall_main' 
+        nextSceneId: 'explore_hall_main'
       },
       { 
         id: 'elena_offer_help', label: '提供协作', timeCost: 1.0, variant: 'accent',
@@ -28,11 +28,12 @@ export const encounterPlots: Record<string, PlotScene> = {
           ctx.game.addLog('她审视了你一会儿。“你的眼神还没死透。也许我们能达成某种共识。”', 'info');
         },
         nextSceneId: 'explore_hall_main'
-      }
+      },
+      { id: 'elena_ignore', label: '不打扰她', timeCost: 0.1, variant: 'default', nextSceneId: 'explore_hall_main' }
     ]
   },
 
-  // --- Marcus T. Encounters ---
+  // --- Marcus T. 偶遇 (走廊收保护费) ---
   'encounter_marcus_corridor_a': {
     id: 'encounter_marcus_corridor_a',
     locationId: 'corridor_a',
@@ -61,14 +62,14 @@ export const encounterPlots: Record<string, PlotScene> = {
     ]
   },
 
-  // --- Dr. Aris Encounters ---
+  // --- Dr. Aris 偶遇 ---
   'encounter_aris_med_bay': {
     id: 'encounter_aris_med_bay',
     locationId: 'med_bay',
     type: 'story',
     text: 'Dr. Aris 正在整理一堆散乱的药剂瓶。看到你进来，他显得有些手忙脚乱，下意识地遮住了身后的一个冷藏箱。',
     actions: [
-      {
+      { 
         id: 'aris_ask_meds', label: '请求一些止痛药', timeCost: 0.5, variant: 'accent',
         effect: (ctx) => {
           if (ctx.npcs.npcs['aris'].trust > 40) {
@@ -77,23 +78,23 @@ export const encounterPlots: Record<string, PlotScene> = {
               id: 'painkillers', name: '止痛药', description: '虽然快过期了，但能缓解疼痛。', icon: 'pill', quantity: 1, category: 'consumable'
             });
           } else {
-            ctx.game.addLog('“规则不允许我私自发放物资，”他躲闪着你的目光，“请离开这里。”', 'info');
-            ctx.npcs.interact('aris', 2, 5);
+            ctx.game.addLog('“我这里的配额连重伤员都不够用，”他冷冷地拒绝了你，“去别处看看吧。”', 'warning');
           }
         },
         nextSceneId: 'explore_med_bay'
-      }
+      },
+      { id: 'aris_ignore', label: '只是路过', timeCost: 0.1, variant: 'default', nextSceneId: 'explore_med_bay' }
     ]
   },
 
-  // --- Hallucination NPCs (Low Sanity Only) ---
+  // --- 幻觉: 走廊的小女孩 ---
   'encounter_hallucination_ghost_girl': {
     id: 'encounter_hallucination_ghost_girl',
     locationId: 'corridor_a',
     type: 'story',
     text: '走廊的尽头站着一个穿着白色裙子的小女孩。她背对着你，正在低声哭泣。在这冰冷的金属设施里，这显得极其突兀。',
     actions: [
-      {
+      { 
         id: 'ghost_girl_approach', label: '走过去安慰她', timeCost: 0.5, variant: 'accent',
         effect: (ctx) => {
           ctx.game.addLog('当你触碰到她的肩膀时，她转过头——那是一张没有任何五官的脸。她发出了刺耳的尖叫。', 'warning');
@@ -101,7 +102,7 @@ export const encounterPlots: Record<string, PlotScene> = {
         },
         nextSceneId: 'explore_corridor_a'
       },
-      {
+      { 
         id: 'ghost_girl_ignore', label: '闭上眼睛快步走过', timeCost: 0.25, variant: 'default',
         effect: (ctx) => {
           ctx.game.addLog('你强迫自己不去听那哭声。当你睁开眼时，女孩已经不见了。', 'info');
@@ -111,13 +112,14 @@ export const encounterPlots: Record<string, PlotScene> = {
     ]
   },
 
+  // --- 幻觉: 阴影商人 ---
   'encounter_hallucination_shadow_vendor': {
     id: 'encounter_hallucination_shadow_vendor',
     locationId: 'warehouse_back',
     type: 'story',
     text: '阴影中坐着一个披着大衣的男人。他向你招手，展示着一叠花绿绿的额度卡。“想要吗？只需要你的一点点……灵魂。”',
     actions: [
-      {
+      { 
         id: 'shadow_vendor_deal', label: '同意交易 (失去 10 生命值)', timeCost: 0.5, variant: 'danger',
         effect: (ctx) => {
           ctx.game.player.stats.hp -= 10;
@@ -126,7 +128,7 @@ export const encounterPlots: Record<string, PlotScene> = {
         },
         nextSceneId: 'explore_warehouse_back'
       },
-      {
+      { 
         id: 'shadow_vendor_refuse', label: '拒绝这诡异的交易', timeCost: 0.25, variant: 'default',
         nextSceneId: 'explore_warehouse_back'
       }
