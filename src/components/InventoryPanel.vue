@@ -44,6 +44,15 @@
           </button>
         </div>
         <p class="idet-desc">{{ selectedItem.description }}</p>
+        <div class="idet-footer">
+          <button 
+            v-if="selectedItem.category === 'consumable'"
+            class="use-btn"
+            @click="handleUse"
+          >
+            使用物品
+          </button>
+        </div>
       </div>
       <div v-else class="inv-detail inv-detail-empty">
         <span>选择物品查看详情</span>
@@ -62,7 +71,18 @@ const props = defineProps<{
   inventory: InventoryItem[]
 }>()
 
+const emit = defineEmits<{
+  useItem: [id: string]
+}>()
+
 const selectedItem = ref<InventoryItem | null>(null)
+
+const handleUse = () => {
+  if (selectedItem.value) {
+    emit('useItem', selectedItem.value.id)
+    selectedItem.value = null
+  }
+}
 
 watch(
   () => props.inventory,
@@ -207,11 +227,14 @@ watch(
 
 .inv-detail {
   flex-shrink: 0;
-  min-height: 70px;
+  min-height: 100px;
   background-color: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .inv-detail-empty {
@@ -226,7 +249,7 @@ watch(
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 6px;
+  margin-bottom: 2px;
 }
 
 .idet-name {
@@ -247,5 +270,27 @@ watch(
   font-size: 0.82rem;
   color: var(--text-secondary);
   line-height: 1.6;
+  flex: 1;
+}
+
+.idet-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 4px;
+}
+
+.use-btn {
+  background-color: var(--accent-primary);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 6px 16px;
+  border-radius: var(--radius-md);
+  transition: all 0.15s;
+}
+
+.use-btn:active {
+  transform: scale(0.95);
+  background-color: var(--accent-bright);
 }
 </style>

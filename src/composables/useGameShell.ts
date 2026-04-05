@@ -63,12 +63,25 @@ export function useGameShell() {
 
         if (checkSceneExists(sceneId)) {
           triggerScene(sceneId)
-        } else {
-          triggerScene(`explore_${targetId}`)
+          return
         }
-      } else {
-        triggerScene(`explore_${targetId}`)
       }
+
+      // 特殊逻辑：低理智幻觉偶遇 (20% 几率，理智 < 40)
+      if (player.value.stats.sanity < 40 && Math.random() < 0.2) {
+        const hallucinations = [
+          'encounter_hallucination_ghost_girl',
+          'encounter_hallucination_shadow_vendor'
+        ].filter(id => checkSceneExists(id))
+        
+        if (hallucinations.length > 0) {
+          const sid = hallucinations[Math.floor(Math.random() * hallucinations.length)]
+          triggerScene(sid)
+          return
+        }
+      }
+
+      triggerScene(`explore_${targetId}`)
 
       return
     }
@@ -104,5 +117,6 @@ export function useGameShell() {
     weatherName,
     formattedTime,
     executeAction,
+    useItem: (id: string) => gameStore.useItem(id),
   }
 }

@@ -21,5 +21,6 @@ export interface PlotScene {
   type: 'story' | 'info' | 'warning';
   text: string | ((context: PlotEffectContext) => string);
   actions: PlotAction[];
+  allowFieldRest?: boolean; // 新增：是否允许在此场景原地休息
   onEnter?: (context: PlotEffectContext) => void;
 }

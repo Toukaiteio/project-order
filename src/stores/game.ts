@@ -89,7 +89,9 @@ export const useGameStore = defineStore('game', {
       location: 'cell_01',
       money: 0,
     } as GameState,
-    flags: {} as Record<string, boolean | number | string>,
+    flags: {
+      hoursSinceLastRest: 0,
+    } as Record<string, any>,
     inventory: [
       { id: 'ration', name: '合成口粮', description: '一块硬得像石头的压缩饼干，能维持基本生命。', icon: 'package', quantity: 1, category: 'consumable' }
     ] as InventoryItem[],
@@ -114,6 +116,7 @@ export const useGameStore = defineStore('game', {
       this.player.traits = playerData.traits;
       this.player.stats = { ...playerData.stats };
       this.game.started = true;
+      this.flags.hoursSinceLastRest = 0;
       
       this.addLog(
         `你在头痛欲裂中醒来，记忆的碎片逐渐拼凑出你的身份：${this.player.name}。空气里弥漫着消毒水与铁锈的气味。`,
@@ -142,6 +145,31 @@ export const useGameStore = defineStore('game', {
 
     consumeTime(hours: number) {
       this.game.time += hours;
+      
+      // 疲劳度逻辑
+      if (typeof this.flags.hoursSinceLastRest === 'number') {
+        this.flags.hoursSinceLastRest += hours;
+        
+        // 惩罚逻辑：熬夜（超过 18 小时不休息）开始掉理智
+        if (this.flags.hoursSinceLastRest > 18) {
+          const sanityLoss = Math.floor((this.flags.hoursSinceLastRest - 18) * 2);
+          this.player.stats.sanity = Math.max(0, this.player.stats.sanity - sanityLoss);
+          
+          if (this.player.stats.sanity <= 0) {
+            this.player.stats.hp = Math.max(1, this.player.stats.hp - 5);
+            this.addLog('你已经到了极限，眼前的黑暗正在把你吞没。', 'warning');
+          } else {
+            this.addLog('你感到极度疲惫，思绪开始变得混乱。', 'warning');
+          }
+        }
+      }
+
+      // 惩罚逻辑：低理智导致理智上限永久萎缩
+      if (this.player.stats.sanity < 15) {
+        this.player.stats.maxSanity = Math.max(30, this.player.stats.maxSanity - 1);
+        this.addLog('长期的精神折磨正在永久性地摧毁你的大脑。', 'warning');
+      }
+
       while (this.game.time >= 24) {
         this.game.time -= 24;
         this.advanceDay();
@@ -183,5 +211,37 @@ export const useGameStore = defineStore('game', {
       const next = this.mapNodes.find(n => n.id === nodeId);
       if (next) { next.state = 'current'; this.game.location = nodeId; }
     },
+
+    useItem(itemId: string) {
+      const index = this.inventory.findIndex(i => i.id === itemId);
+      if (index === -1) return;
+
+      const item = this.inventory[index];
+      let success = false;
+
+      if (item.id === 'ration') {
+        this.player.stats.hp = Math.min(this.player.stats.maxHp, this.player.stats.hp + 15);
+        this.addLog('你吃掉了压缩口粮，虽然口感极差，但体力恢复了一些。', 'info');
+        success = true;
+      } else if (item.id === 'adrenaline') {
+        this.player.stats.hp = Math.min(this.player.stats.maxHp, this.player.stats.hp + 20);
+        this.player.stats.strength += 5;
+        this.player.stats.dexterity += 5;
+        this.addLog('肾上腺素让你的心脏狂跳，你感到体内充满了爆发性的力量。', 'warning');
+        success = true;
+      } else if (item.id === 'painkillers') {
+        this.player.stats.sanity = Math.min(this.player.stats.maxSanity, this.player.stats.sanity + 20);
+        this.addLog('药物缓解了神经的抽痛，你的思绪清晰了许多。', 'info');
+        success = true;
+      }
+
+      if (success) {
+        if (item.quantity > 1) {
+          item.quantity -= 1;
+        } else {
+          this.inventory.splice(index, 1);
+        }
+      }
+    }
   },
 });

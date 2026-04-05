@@ -8,7 +8,20 @@ export const locationExplorationPlots: Record<string, PlotScene> = {
     text: '你的私人牢房。窄小的板床，散发着霉味的墙壁。这里是你唯一的喘息之所。',
     actions: [
       { id: 'search_bed', label: '搜寻床铺', timeCost: 0.5, variant: 'default', nextSceneId: 'found_note', condition: (ctx) => !ctx.game.flags.found_crumpled_note },
-      { id: 'rest', label: '稍作休息', timeCost: 1.0, variant: 'default', effect: (ctx) => { ctx.game.player.stats.sanity = Math.min(ctx.game.player.stats.maxSanity, ctx.game.player.stats.sanity + 10); ctx.game.addLog('安静的休息让你的理智恢复了一些。', 'info'); } },
+      { id: 'rest', label: '稍作休息', timeCost: 1.0, variant: 'default', 
+        effect: (ctx) => { 
+          ctx.game.player.stats.sanity = Math.min(ctx.game.player.stats.maxSanity, ctx.game.player.stats.sanity + 15); 
+          ctx.game.flags.hoursSinceLastRest = 0;
+          ctx.game.addLog('安静的休息让你的理智恢复了一些，疲劳感暂时消失了。', 'info'); 
+        } 
+      },
+      { id: 'whisper_wall', label: '对着墙壁低语', timeCost: 0.5, variant: 'danger', 
+        condition: (ctx) => ctx.game.player.stats.sanity < 30,
+        effect: (ctx) => {
+          ctx.game.addLog('墙壁回应了你。它告诉你，林夕并没有死，她只是变成了墙的一部分。', 'warning');
+          ctx.game.player.stats.sanity -= 5;
+        }
+      },
       { id: 'move_corridor_a', label: '前往走廊', timeCost: 0.25, variant: 'accent' },
     ]
   },
@@ -16,6 +29,7 @@ export const locationExplorationPlots: Record<string, PlotScene> = {
     id: 'explore_corridor_a',
     locationId: 'corridor_a',
     type: 'info',
+    allowFieldRest: true,
     text: '走廊 Alpha。灯光忽明忽暗，发出嘶嘶的电流声。两侧排列着更多的紧锁的金属门霸。空气中弥漫着消毒水的味道。',
     actions: [
       { id: 'move_hall_main', label: '前往设施大厅', timeCost: 0.25, variant: 'accent' },
@@ -27,6 +41,7 @@ export const locationExplorationPlots: Record<string, PlotScene> = {
     id: 'explore_hall_main',
     locationId: 'hall_main',
     type: 'story',
+    allowFieldRest: true,
     text: '设施大厅。这是一个巨大的圆形空腔区域，高度足有三层。这里是设施的中心枢纽，通往各个核心区域。',
     actions: [
       { id: 'move_corridor_a', label: '返回走廊 Alpha', timeCost: 0.25, variant: 'default' },
@@ -39,7 +54,7 @@ export const locationExplorationPlots: Record<string, PlotScene> = {
     id: 'explore_med_bay',
     locationId: 'med_bay',
     type: 'info',
-    text: 'Medical Post。这里充满了刺鼻的漂白粉味，冰冷的金属手术台在昏暗的灯光下闪着寒光。',
+    text: '医疗站。这里充满了刺鼻的漂白粉味，冰冷的金属手术台在昏暗的灯光下闪着寒光。',
     actions: [
       { id: 'move_hall_main', label: '返回大厅', timeCost: 0.5, variant: 'default' },
       { id: 'search_meds', label: '翻找医疗垃圾', timeCost: 1.0, variant: 'danger', 
@@ -60,7 +75,8 @@ export const locationExplorationPlots: Record<string, PlotScene> = {
     id: 'explore_mess_hall',
     locationId: 'mess_hall',
     type: 'story',
-    text: 'Communal Mess。空气中弥漫着廉价合成蛋白的味道。',
+    allowFieldRest: true,
+    text: '公共食堂。空气中弥漫着廉价合成蛋白的味道。',
     actions: [
       { id: 'move_hall_main', label: '返回大厅', timeCost: 0.5, variant: 'default' },
       { id: 'move_garbage_chute', label: '前往废料处理区', timeCost: 0.5, variant: 'default' },
@@ -89,6 +105,14 @@ export const locationExplorationPlots: Record<string, PlotScene> = {
     text: '废料处理区。巨大的粉碎机发出低沉的轰鸣，这里堆满了废弃的实验器材。',
     actions: [
       { id: 'move_mess_hall', label: '返回食堂', timeCost: 0.5, variant: 'default' },
+      { id: 'stare_drain', label: '凝视排水口', timeCost: 1.0, variant: 'danger',
+        condition: (ctx) => ctx.game.player.stats.sanity < 20,
+        effect: (ctx) => {
+          ctx.game.addLog('你看到排水口里有一只巨大的眼睛正在回望着你。那不是人类的眼睛。', 'warning');
+          ctx.game.player.stats.intelligence += 2;
+          ctx.game.player.stats.sanity -= 10;
+        }
+      }
     ]
   },
   'explore_cell_02': {

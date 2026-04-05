@@ -84,5 +84,52 @@ export const encounterPlots: Record<string, PlotScene> = {
         nextSceneId: 'explore_med_bay'
       }
     ]
+  },
+
+  // --- Hallucination NPCs (Low Sanity Only) ---
+  'encounter_hallucination_ghost_girl': {
+    id: 'encounter_hallucination_ghost_girl',
+    locationId: 'corridor_a',
+    type: 'story',
+    text: '走廊的尽头站着一个穿着白色裙子的小女孩。她背对着你，正在低声哭泣。在这冰冷的金属设施里，这显得极其突兀。',
+    actions: [
+      {
+        id: 'ghost_girl_approach', label: '走过去安慰她', timeCost: 0.5, variant: 'accent',
+        effect: (ctx) => {
+          ctx.game.addLog('当你触碰到她的肩膀时，她转过头——那是一张没有任何五官的脸。她发出了刺耳的尖叫。', 'warning');
+          ctx.game.player.stats.sanity -= 20;
+        },
+        nextSceneId: 'explore_corridor_a'
+      },
+      {
+        id: 'ghost_girl_ignore', label: '闭上眼睛快步走过', timeCost: 0.25, variant: 'default',
+        effect: (ctx) => {
+          ctx.game.addLog('你强迫自己不去听那哭声。当你睁开眼时，女孩已经不见了。', 'info');
+        },
+        nextSceneId: 'explore_corridor_a'
+      }
+    ]
+  },
+
+  'encounter_hallucination_shadow_vendor': {
+    id: 'encounter_hallucination_shadow_vendor',
+    locationId: 'warehouse_back',
+    type: 'story',
+    text: '阴影中坐着一个披着大衣的男人。他向你招手，展示着一叠花绿绿的额度卡。“想要吗？只需要你的一点点……灵魂。”',
+    actions: [
+      {
+        id: 'shadow_vendor_deal', label: '同意交易 (失去 10 生命值)', timeCost: 0.5, variant: 'danger',
+        effect: (ctx) => {
+          ctx.game.player.stats.hp -= 10;
+          ctx.game.game.money += 30;
+          ctx.game.addLog('你感到身体一阵空虚，但口袋里确实多了几张沉甸甸的额度卡。男人发出了干瘪的笑声。', 'warning');
+        },
+        nextSceneId: 'explore_warehouse_back'
+      },
+      {
+        id: 'shadow_vendor_refuse', label: '拒绝这诡异的交易', timeCost: 0.25, variant: 'default',
+        nextSceneId: 'explore_warehouse_back'
+      }
+    ]
   }
 };

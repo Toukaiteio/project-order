@@ -25,6 +25,7 @@
         <InventoryPanel
           :active="tab === 'inventory'"
           :inventory="inventory"
+          @use-item="useItem"
         />
       </main>
 
@@ -76,6 +77,7 @@ const {
   tab,
   weatherIcon,
   weatherName,
+  useItem,
 } = useGameShell()
 </script>
 

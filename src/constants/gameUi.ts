@@ -67,6 +67,8 @@ const ACTION_ICONS: Record<string, Component> = {
   observe_records: BookOpen,
   eavesdrop: Ear,
   pillage_box: Skull,
+  whisper_wall: MessageSquare,
+  stare_drain: Eye,
   choice_cooperate: Users,
   choice_betray: Skull,
   continue: ChevronRight,
