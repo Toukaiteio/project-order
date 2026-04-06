@@ -6,9 +6,22 @@ import { useScheduleStore } from '../stores/schedule';
 import { day01Plots } from '../content/plots/arc1/day01';
 import { day02Plots } from '../content/plots/arc1/day02';
 import { day03Plots } from '../content/plots/arc1/day03';
+import { day04Plots } from '../content/plots/arc1/day04';
 import { day05Plots } from '../content/plots/arc1/day05';
+import { day06Plots } from '../content/plots/arc1/day06';
+import { day07Plots } from '../content/plots/arc1/day07';
+import { day08Plots } from '../content/plots/arc1/day08';
+import { day09Plots } from '../content/plots/arc1/day09';
+import { day10Plots } from '../content/plots/arc1/day10';
 import { day11Plots } from '../content/plots/arc1/day11';
+import { day12Plots } from '../content/plots/arc1/day12';
+import { day13Plots } from '../content/plots/arc1/day13';
+import { day14Plots } from '../content/plots/arc1/day14';
 import { day15Plots } from '../content/plots/arc1/day15';
+import { day16Plots } from '../content/plots/arc2/day16';
+import { day17Plots } from '../content/plots/arc2/day17';
+import { day18Plots } from '../content/plots/arc2/day18';
+import { day19Plots } from '../content/plots/arc2/day19';
 import { day20Plots } from '../content/plots/arc2/day20';
 import { day21Plots } from '../content/plots/arc2/day21';
 import { day22Plots } from '../content/plots/arc2/day22';
@@ -120,9 +133,22 @@ const ALL_PLOTS: Record<string, PlotScene> = {
   ...day01Plots,
   ...day02Plots,
   ...day03Plots,
+  ...day04Plots,
   ...day05Plots,
+  ...day06Plots,
+  ...day07Plots,
+  ...day08Plots,
+  ...day09Plots,
+  ...day10Plots,
   ...day11Plots,
+  ...day12Plots,
+  ...day13Plots,
+  ...day14Plots,
   ...day15Plots,
+  ...day16Plots,
+  ...day17Plots,
+  ...day18Plots,
+  ...day19Plots,
   ...day20Plots,
   ...day21Plots,
   ...day22Plots,
