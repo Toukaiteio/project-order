@@ -10,10 +10,75 @@ import { day05Plots } from '../content/plots/arc1/day05';
 import { day11Plots } from '../content/plots/arc1/day11';
 import { day15Plots } from '../content/plots/arc1/day15';
 import { day20Plots } from '../content/plots/arc2/day20';
+import { day21Plots } from '../content/plots/arc2/day21';
+import { day22Plots } from '../content/plots/arc2/day22';
+import { day23Plots } from '../content/plots/arc2/day23';
+import { day24Plots } from '../content/plots/arc2/day24';
+import { day25Plots } from '../content/plots/arc2/day25';
+import { day26Plots } from '../content/plots/arc2/day26';
+import { day27Plots } from '../content/plots/arc2/day27';
+import { day28Plots } from '../content/plots/arc2/day28';
+import { day29Plots } from '../content/plots/arc2/day29';
 import { day30Plots } from '../content/plots/arc2/day30';
+import { day31Plots } from '../content/plots/arc3/day31';
+import { day32Plots } from '../content/plots/arc3/day32';
+import { day33Plots } from '../content/plots/arc3/day33';
+import { day34Plots } from '../content/plots/arc3/day34';
+import { day35Plots } from '../content/plots/arc3/day35';
+import { day36Plots } from '../content/plots/arc3/day36';
+import { day37Plots } from '../content/plots/arc3/day37';
+import { day38Plots } from '../content/plots/arc3/day38';
+import { day39Plots } from '../content/plots/arc3/day39';
+import { day40Plots } from '../content/plots/arc3/day40';
+import { day41Plots } from '../content/plots/arc3/day41';
+import { day42Plots } from '../content/plots/arc3/day42';
+import { day43Plots } from '../content/plots/arc3/day43';
+import { day44Plots } from '../content/plots/arc3/day44';
 import { day45Plots } from '../content/plots/arc3/day45';
+import { day46Plots } from '../content/plots/arc4/day46';
+import { day47Plots } from '../content/plots/arc4/day47';
+import { day48Plots } from '../content/plots/arc4/day48';
+import { day49Plots } from '../content/plots/arc4/day49';
+import { day50Plots } from '../content/plots/arc4/day50';
+import { day51Plots } from '../content/plots/arc4/day51';
+import { day52Plots } from '../content/plots/arc4/day52';
+import { day53Plots } from '../content/plots/arc4/day53';
+import { day54Plots } from '../content/plots/arc4/day54';
+import { day55Plots } from '../content/plots/arc4/day55';
+import { day56Plots } from '../content/plots/arc4/day56';
+import { day57Plots } from '../content/plots/arc4/day57';
+import { day58Plots } from '../content/plots/arc4/day58';
+import { day59Plots } from '../content/plots/arc4/day59';
 import { day60Plots } from '../content/plots/arc4/day60';
+import { day61Plots } from '../content/plots/arc5/day61';
+import { day62Plots } from '../content/plots/arc5/day62';
+import { day63Plots } from '../content/plots/arc5/day63';
+import { day64Plots } from '../content/plots/arc5/day64';
+import { day65Plots } from '../content/plots/arc5/day65';
+import { day66Plots } from '../content/plots/arc5/day66';
+import { day67Plots } from '../content/plots/arc5/day67';
+import { day68Plots } from '../content/plots/arc5/day68';
+import { day69Plots } from '../content/plots/arc5/day69';
+import { day70Plots } from '../content/plots/arc5/day70';
+import { day71Plots } from '../content/plots/arc5/day71';
+import { day72Plots } from '../content/plots/arc5/day72';
+import { day73Plots } from '../content/plots/arc5/day73';
+import { day74Plots } from '../content/plots/arc5/day74';
 import { day75Plots } from '../content/plots/arc5/day75';
+import { day76Plots } from '../content/plots/arc6/day76';
+import { day77Plots } from '../content/plots/arc6/day77';
+import { day78Plots } from '../content/plots/arc6/day78';
+import { day79Plots } from '../content/plots/arc6/day79';
+import { day80Plots } from '../content/plots/arc6/day80';
+import { day81Plots } from '../content/plots/arc6/day81';
+import { day82Plots } from '../content/plots/arc6/day82';
+import { day83Plots } from '../content/plots/arc6/day83';
+import { day84Plots } from '../content/plots/arc6/day84';
+import { day85Plots } from '../content/plots/arc6/day85';
+import { day86Plots } from '../content/plots/arc6/day86';
+import { day87Plots } from '../content/plots/arc6/day87';
+import { day88Plots } from '../content/plots/arc6/day88';
+import { day89Plots } from '../content/plots/arc6/day89';
 import { day90Plots } from '../content/plots/arc6/day90';
 import { companionPlots } from '../content/plots/shared/companion';
 import { trainingPlots } from '../content/plots/shared/training';
@@ -59,10 +124,75 @@ const ALL_PLOTS: Record<string, PlotScene> = {
   ...day11Plots,
   ...day15Plots,
   ...day20Plots,
+  ...day21Plots,
+  ...day22Plots,
+  ...day23Plots,
+  ...day24Plots,
+  ...day25Plots,
+  ...day26Plots,
+  ...day27Plots,
+  ...day28Plots,
+  ...day29Plots,
   ...day30Plots,
+  ...day31Plots,
+  ...day32Plots,
+  ...day33Plots,
+  ...day34Plots,
+  ...day35Plots,
+  ...day36Plots,
+  ...day37Plots,
+  ...day38Plots,
+  ...day39Plots,
+  ...day40Plots,
+  ...day41Plots,
+  ...day42Plots,
+  ...day43Plots,
+  ...day44Plots,
   ...day45Plots,
+  ...day46Plots,
+  ...day47Plots,
+  ...day48Plots,
+  ...day49Plots,
+  ...day50Plots,
+  ...day51Plots,
+  ...day52Plots,
+  ...day53Plots,
+  ...day54Plots,
+  ...day55Plots,
+  ...day56Plots,
+  ...day57Plots,
+  ...day58Plots,
+  ...day59Plots,
   ...day60Plots,
+  ...day61Plots,
+  ...day62Plots,
+  ...day63Plots,
+  ...day64Plots,
+  ...day65Plots,
+  ...day66Plots,
+  ...day67Plots,
+  ...day68Plots,
+  ...day69Plots,
+  ...day70Plots,
+  ...day71Plots,
+  ...day72Plots,
+  ...day73Plots,
+  ...day74Plots,
   ...day75Plots,
+  ...day76Plots,
+  ...day77Plots,
+  ...day78Plots,
+  ...day79Plots,
+  ...day80Plots,
+  ...day81Plots,
+  ...day82Plots,
+  ...day83Plots,
+  ...day84Plots,
+  ...day85Plots,
+  ...day86Plots,
+  ...day87Plots,
+  ...day88Plots,
+  ...day89Plots,
   ...day90Plots,
   ...companionPlots,
   ...trainingPlots,
