@@ -1,103 +1,156 @@
-import type { PlotScene } from '../../../types/plot';
+﻿import type { PlotScene } from '../../../types/plot';
 
 export const sideQuests: Record<string, PlotScene> = {
-  // --- Satoshi K. 支线: 修复终端 ---
   'quest_satoshi_start': {
     id: 'quest_satoshi_start',
     locationId: 'cell_02',
     type: 'story',
-    text: 'Satoshi 蜷缩在床角，手里摆弄着一块电路板。看到你进来，他显得很紧张，但随即眼神亮了一下：“你……你能帮我吗？我需要一个高频震荡子，我在废料处理区的粉碎机附近见过它。”',
+    text: 'Satoshi 缩在床角，手里捏着一块拆到一半的电路板。看见你进来，他先是下意识把东西往怀里一藏，随后又低声叫住你。"你要是去废料区，帮我留意一个高频振荡器。只有那东西还能把这台破终端拖回来。"',
     actions: [
-      { 
-        id: 'accept_satoshi', label: '答应帮他寻找', timeCost: 0.5, variant: 'accent',
-        effect: (ctx) => { 
-          ctx.game.flags.satoshi_quest_active = true; 
-          ctx.game.addLog('你接下了 Satoshi 的请求。', 'info'); 
-          ctx.game.setObjective('前往废料处理区寻找零件');
+      {
+        id: 'accept_satoshi',
+        label: '记下这件事',
+        timeCost: 0.5,
+        variant: 'accent',
+        effect: (ctx) => {
+          ctx.game.flags.satoshi_quest_active = true;
+          ctx.game.addLog('你把那件零件记了下来。Satoshi 没再多说，只把那块电路板握得更紧。', 'info');
+          ctx.game.setObjective('去废料处理区找 Satoshi 需要的零件');
         },
         nextSceneId: 'explore_cell_02'
       },
-      { id: 'refuse_satoshi', label: '没空管闲事', timeCost: 0.25, variant: 'default', nextSceneId: 'explore_cell_02' }
+      {
+        id: 'refuse_satoshi',
+        label: '先顾自己',
+        timeCost: 0.25,
+        variant: 'default',
+        effect: (ctx) => {
+          ctx.game.flags.satoshi_refused = true;
+        },
+        nextSceneId: 'explore_cell_02'
+      }
     ]
   },
   'quest_satoshi_find_part': {
     id: 'quest_satoshi_find_part',
     locationId: 'garbage_chute',
     type: 'warning',
-    text: '巨大的粉碎机正在缓慢转动。你看到在履带的边缘卡着一个闪烁着微弱蓝光的零件。',
+    text: '废料传送带边缘卡着一枚还在闪弱光的零件。齿轮转得不快，但只要手慢一点，那玩意就会先你一步被卷进去。',
     actions: [
-      { 
-        id: 'grab_part', label: '伸手去够那个零件', timeCost: 1.0, variant: 'danger',
+      {
+        id: 'grab_part',
+        label: '伸手去够',
+        timeCost: 1.0,
+        variant: 'danger',
         condition: (ctx) => ctx.game.player.stats.dexterity >= 6,
         effect: (ctx) => {
-          ctx.game.inventory.push({ id: 'electronic_part', name: '电子零件', description: '虽然沾满了油污，但依然在运作。', icon: 'zap', quantity: 1, category: 'tool' });
+          ctx.game.inventory.push({
+            id: 'electronic_part',
+            name: '电子零件',
+            description: '虽然沾满了油污，但依然在运作。',
+            icon: 'zap',
+            quantity: 1,
+            category: 'tool'
+          });
           ctx.game.flags.has_satoshi_part = true;
-          ctx.game.addLog('你成功拿到了零件！', 'info');
-          ctx.game.setObjective('将零件带回给 Satoshi');
+          ctx.game.addLog('你在齿轮合拢前把零件抽了出来。手背擦破了一层皮，但它还完整。', 'info');
+          ctx.game.setObjective('把零件带回给 Satoshi');
         },
         nextSceneId: 'explore_garbage_chute'
       },
-      { id: 'leave_part', label: '太危险了，放弃', timeCost: 0.25, variant: 'default', nextSceneId: 'explore_garbage_chute' }
+      {
+        id: 'leave_part',
+        label: '算了',
+        timeCost: 0.25,
+        variant: 'default',
+        effect: (ctx) => {
+          ctx.game.flags.satoshi_part_missed = true;
+        },
+        nextSceneId: 'explore_garbage_chute'
+      }
     ]
   },
   'quest_satoshi_complete': {
     id: 'quest_satoshi_complete',
     locationId: 'cell_02',
     type: 'story',
-    text: 'Satoshi 颤抖着接过零件，熟练地将其焊在电路板上。一阵滋滋声后，他破旧的终端亮起了绿光。',
+    text: 'Satoshi 接过零件时，指尖都在抖。他熟练地把它焊回板子，几秒后，那台旧终端终于亮起一层惨绿的底光。',
     actions: [
       {
-        id: 'listen_to_terminal', label: '听听他发现了什么', timeCost: 1.0, variant: 'accent',
+        id: 'listen_to_terminal',
+        label: '听他说刚刚捕到的东西',
+        timeCost: 1.0,
+        variant: 'accent',
         effect: (ctx) => {
           ctx.game.player.stats.intelligence += 5;
           ctx.game.flags.satoshi_allied = true;
-          ctx.game.addLog('通过终端，你听到了管理区的一些杂音……他们似乎在谈论某种“进化指标”。', 'story');
-          ctx.game.setObjective('在生存中寻找真相');
+          ctx.game.flags.satoshi_terminal_repaired = true;
+          ctx.game.addLog('静电里夹着一串管理频道的碎句。你们谁都没完全听懂，但已经够确认，这地方很多东西从来不是故障。', 'warning');
+          ctx.game.setObjective('在活下去的同时，继续追查这座设施到底在筛选什么');
         },
         nextSceneId: 'explore_cell_02'
       }
     ]
   },
 
-  // --- Sasha P. 支线: 丢失的吊坠 ---
   'quest_sasha_locket_start': {
     id: 'quest_sasha_locket_start',
     locationId: 'corridor_a',
     type: 'story',
-    text: '你看到 Sasha 正蹲在墙角小声啜泣。几个高大的囚犯刚刚哄笑着离开。她抬起红肿的眼睛，“他们……他们把我的吊坠抢走扔进垃圾槽了。那是我唯一的家人照片……”',
+    text: '走廊拐角，Sasha 正蹲在墙边把脸埋进手里。几个刚走开的犯人还在笑，说她居然为一块破金属急成这样。她抬头时眼眶是红的。"他们把我的吊坠扔去废料口了。里面有张照片。"',
     actions: [
-      { 
-        id: 'accept_sasha_locket', label: '帮她找回来', timeCost: 0.5, variant: 'accent',
+      {
+        id: 'accept_sasha_locket',
+        label: '去帮她找',
+        timeCost: 0.5,
+        variant: 'accent',
         effect: (ctx) => {
           ctx.game.flags.sasha_locket_active = true;
-          ctx.game.addLog('你决定帮这个可怜的女孩找回她的吊坠。', 'info');
-          ctx.game.setObjective('在废料处理区寻找吊坠');
+          ctx.game.addLog('Sasha 说到一半就不敢再说，只把废料区的方向指给你看。', 'info');
+          ctx.game.setObjective('去废料处理区找回 Sasha 的吊坠');
         },
         nextSceneId: 'explore_corridor_a'
       },
-      { id: 'ignore_sasha_locket', label: '视而不见', timeCost: 0.1, variant: 'default', nextSceneId: 'explore_corridor_a' }
+      {
+        id: 'ignore_sasha_locket',
+        label: '别卷进去',
+        timeCost: 0.1,
+        variant: 'default',
+        effect: (ctx) => {
+          ctx.game.flags.sasha_locket_refused = true;
+        },
+        nextSceneId: 'explore_corridor_a'
+      }
     ]
   },
   'quest_sasha_locket_find': {
     id: 'quest_sasha_locket_find',
     locationId: 'garbage_chute',
     type: 'warning',
-    text: '你在恶心的废料堆里翻找。终于，在一个破旧的滤网下，你看到了一抹金属光泽。',
+    text: '一层发臭的湿网下面，隐约压着一点金属反光。你把那团东西拨开，露出一枚被污水泡得发黑的银色吊坠。',
     actions: [
       {
-        id: 'pick_up_locket', label: '捡起吊坠', timeCost: 1.0, variant: 'accent',
+        id: 'pick_up_locket',
+        label: '把它捡起来',
+        timeCost: 1.0,
+        variant: 'accent',
         effect: (ctx) => {
-          ctx.game.inventory.push({ id: 'sasha_locket', name: '银色吊坠', description: '里面有一张模糊的全家福。', icon: 'image', quantity: 1, category: 'misc' });
+          ctx.game.inventory.push({
+            id: 'sasha_locket',
+            name: '银色吊坠',
+            description: '里面夹着一张已经模糊的全家福。',
+            icon: 'image',
+            quantity: 1,
+            category: 'misc'
+          });
           ctx.game.flags.has_sasha_locket = true;
-          ctx.game.addLog('你忍着恶臭捡起了吊坠。', 'info');
-          ctx.game.setObjective('将吊坠还给 Sasha');
+          ctx.game.addLog('你把那枚吊坠从污物里捞了出来。它很轻，却像还压着一点旧日子。', 'info');
+          ctx.game.setObjective('把吊坠还给 Sasha');
         },
         nextSceneId: 'explore_garbage_chute'
       }
     ]
   },
-
-  // --- Sasha 项链返回场景 ---
   'quest_sasha_locket_return': {
     id: 'quest_sasha_locket_return',
     locationId: 'mess_hall',
@@ -105,60 +158,90 @@ export const sideQuests: Record<string, PlotScene> = {
     text: (ctx) => {
       const npc = ctx.npcs.npcs['sasha'];
       if (!npc || npc.state !== 'Alive') {
-        return '你来到食堂想找 Sasha，但她不在了。角落的座位是空的，永远是空的。';
+        return '你本来想把吊坠交还给 Sasha，可她常坐的位置已经空了。桌边没人，只有那种再也等不到人的安静。';
       }
-      return '你在食堂的角落找到了 Sasha。她正在用那种机械化的动作拨弄她的口粮，眼神空洞而疲惫。';
+      return 'Sasha 缩在食堂角落，一点点掰着口粮。你走近时，她先是本能地往后缩了缩，像已经习惯别人靠近她只是为了拿走什么。';
     },
     actions: [
       {
-        id: 'return_locket_to_sasha', label: '把吊坠递给她', timeCost: 0.5, variant: 'accent',
+        id: 'return_locket_to_sasha',
+        label: '把吊坠递过去',
+        timeCost: 0.5,
+        variant: 'accent',
         condition: (ctx) => ctx.game.inventory.some((i: any) => i.id === 'sasha_locket'),
         effect: (ctx) => {
           const idx = ctx.game.inventory.findIndex((i: any) => i.id === 'sasha_locket');
-          ctx.game.inventory.splice(idx, 1);
+          if (idx >= 0) ctx.game.inventory.splice(idx, 1);
           ctx.game.flags.sasha_locket_returned = true;
           ctx.npcs.interact('sasha', 20, 15);
-          ctx.game.addLog('Sasha 的眼神瞬间恢复了焦点。她接过吊坠，手指颤抖着打开它。看到那张全家福的瞬间，她的眼泪决堤了。\n"谢谢你……"她只能重复这个词，像在重复呼吸。', 'story');
+          ctx.game.addLog('Sasha 打开吊坠时，手指一直在抖。她盯着里面那张几乎看不清的照片看了很久，最后只轻声说了一句“我还以为它也没了”。', 'story');
         },
         nextSceneId: 'explore_mess_hall'
       },
-      { id: 'keep_locket', label: '放弃', timeCost: 0.1, variant: 'default', nextSceneId: 'explore_mess_hall' }
+      {
+        id: 'keep_locket',
+        label: '先不拿出来',
+        timeCost: 0.1,
+        variant: 'default',
+        effect: (ctx) => {
+          ctx.game.flags.sasha_locket_held_back = true;
+        },
+        nextSceneId: 'explore_mess_hall'
+      }
     ]
   },
 
-  // --- Dr. Aris 支线: 秘密配给 ---
   'quest_aris_plea': {
     id: 'quest_aris_plea',
     locationId: 'med_bay',
     type: 'story',
-    text: 'Dr. Aris 将你拉到屏风后面。那里躺着一个神志不清的幸存者。“他快饿死了，组织切断了他的配给，”Aris 低声哀求，“你身上有口粮吗？只要一份，我就能稳住他的情况。”',
+    text: 'Aris 把你拉到帘子后面。病床上那个人已经瘦得像把骨头裹了层皮。Aris 压着声音说：“他再不进食，今晚就会断。你身上要是有多的一份，就现在。”',
     actions: [
       {
-        id: 'give_ration_to_aris', label: '交出一份口粮', timeCost: 0.5, variant: 'accent',
+        id: 'give_ration_to_aris',
+        label: '把口粮递给他',
+        timeCost: 0.5,
+        variant: 'accent',
         condition: (ctx) => ctx.game.inventory.some((i: any) => i.id === 'ration'),
         effect: (ctx) => {
           const idx = ctx.game.inventory.findIndex((i: any) => i.id === 'ration');
-          ctx.game.inventory.splice(idx, 1);
+          if (idx >= 0) ctx.game.inventory.splice(idx, 1);
           ctx.npcs.interact('aris', 40, 30);
-          ctx.game.inventory.push({ id: 'pure_painkiller', name: '高纯度止痛药', description: '强效精神稳定剂。', icon: 'pill', quantity: 1, category: 'consumable' });
-          ctx.game.addLog('Aris 感激地看着你，偷偷塞给你一瓶特制的药剂。', 'info');
+          ctx.game.flags.aris_ration_given = true;
+          ctx.game.inventory.push({
+            id: 'pure_painkiller',
+            name: '高纯度止痛药',
+            description: '强效精神稳定剂。',
+            icon: 'pill',
+            quantity: 1,
+            category: 'consumable'
+          });
+          ctx.game.addLog('Aris 什么都没多说，只把一小瓶药塞进你手里。你知道那不是交易，是他在记这笔人情。', 'info');
         },
         nextSceneId: 'explore_med_bay'
       },
-      { id: 'ignore_aris', label: '我顾不上别人', timeCost: 0.25, variant: 'default', nextSceneId: 'explore_med_bay' }
+      {
+        id: 'ignore_aris',
+        label: '这次不行',
+        timeCost: 0.25,
+        variant: 'default',
+        effect: (ctx) => {
+          ctx.game.flags.aris_refused = true;
+        },
+        nextSceneId: 'explore_med_bay'
+      }
     ]
   },
 
-  // --- Elena V. 支线: 数据收集 ---
   'elena_day20_brief': {
     id: 'elena_day20_brief',
     locationId: 'hall_main',
     type: 'story',
-    text: 'Elena 将一份手写的统计表递给你。上面是每个囚犯的"贡献分"和预期淘汰时间的预测。你在表上找到了自己的名字，旁边有一个大大的问号。',
+    text: 'Elena 递给你一张手写统计表。上面是囚犯们最近几轮的贡献、体能下降速度和“可用性”预测。你的名字也在上面，旁边是一枚没有解释的问号。',
     actions: [
       {
         id: 'accept_elena_brief',
-        label: '接受这份数据',
+        label: '把表收下',
         timeCost: 1.0,
         variant: 'accent',
         effect: (ctx) => {
@@ -166,66 +249,234 @@ export const sideQuests: Record<string, PlotScene> = {
           ctx.game.inventory.push({
             id: 'elena_prediction_table',
             name: 'Elena 的预测表',
-            description: '囚犯们的"存活指数"。上面的名字，很多已经不存在了。',
+            description: '一张关于囚犯“存活指数”的手写统计表。',
             icon: 'document',
             quantity: 1,
             category: 'document'
           });
-          ctx.game.addLog('"问号代表不确定，"Elena 解释道，"而我喜欢消除不确定。帮我收集一些……原始数据。"', 'info');
+          ctx.game.addLog('Elena 说她不喜欢未知，而你正好能帮她把几处空白补上。', 'info');
         },
         nextSceneId: 'explore_hall_main'
       },
-      { id: 'reject_elena_brief', label: '拒绝参与', timeCost: 0.5, variant: 'default', nextSceneId: 'explore_hall_main' }
+      {
+        id: 'reject_elena_brief',
+        label: '别接',
+        timeCost: 0.5,
+        variant: 'default',
+        effect: (ctx) => {
+          ctx.game.flags.elena_brief_rejected = true;
+        },
+        nextSceneId: 'explore_hall_main'
+      }
     ]
   },
-
   'quest_elena_data_collect': {
     id: 'quest_elena_data_collect',
     locationId: 'hall_main',
     type: 'story',
-    text: 'Elena 在大厅等你。她用一种深蓝色的圆珠笔转动着，眼神锐利。"数据的质量取决于取样的多样性。我需要你从三个不同的地点收集信息。"',
+    text: 'Elena 没把话说得太满，只把笔尖点在表上的三个空栏。医疗站、走廊和大厅，她要的不是故事，是那些还没被整理过的原始反应。',
     actions: [
       {
         id: 'understand_elena_task',
-        label: '接受任务',
+        label: '听懂她的意思',
         timeCost: 0.5,
         variant: 'accent',
         effect: (ctx) => {
           ctx.game.flags.elena_data_collect_active = true;
-          ctx.game.setObjective('为 Elena 收集数据：医疗站记录 + 走廊秘密 + 大厅观察');
-          ctx.game.addLog('Elena 列出了三个位置：医疗站的手术记录、走廊里的囚犯对话、大厅的守卫动向。', 'info');
-          ctx.game.addLog('"完成后，我给你一份真正重要的东西——实验的终止协议草案。"', 'danger');
+          ctx.game.setObjective('替 Elena 收集医疗站、走廊和大厅三处的原始信息');
+          ctx.game.addLog('Elena 只说，等你带着足够干净的样本回来，她会给你看一份更脏的文件。', 'warning');
         },
         nextSceneId: 'explore_hall_main'
       },
-      { id: 'decline_elena_task', label: '这太危险了', timeCost: 0.1, variant: 'default', nextSceneId: 'explore_hall_main' }
+      {
+        id: 'decline_elena_task',
+        label: '这事太显眼',
+        timeCost: 0.1,
+        variant: 'default',
+        effect: (ctx) => {
+          ctx.game.flags.elena_task_declined = true;
+        },
+        nextSceneId: 'explore_hall_main'
+      }
     ]
   },
-
   'quest_elena_data_complete': {
     id: 'quest_elena_data_complete',
     locationId: 'hall_main',
     type: 'story',
-    text: 'Elena 接受了你的所有汇报。她那张冰冷的脸上，第一次出现了接近于满意的表情。她递给你一份加密的文件。',
+    text: 'Elena 听完你的汇总后，终于把那份一直压在臂弯里的文件交了出来。她的脸上没有喜色，只有一种把最后一层猜测落实后的疲惫。',
     actions: [
       {
         id: 'receive_termination_protocol',
-        label: '拿起那份文件',
+        label: '把文件拿走',
         timeCost: 1.0,
         variant: 'accent',
         effect: (ctx) => {
           ctx.game.flags.elena_quest_complete = true;
+          ctx.game.flags.termination_protocol_draft = true;
           ctx.game.inventory.push({
             id: 'termination_protocol_draft',
             name: '终止协议草案',
-            description: '这是"秩序之眼"实验的官方终止文件。如果这份文件泄露……后果不堪设想。',
+            description: '关于“秩序之眼”实验的官方终止文件副本。',
             icon: 'document',
             quantity: 1,
             category: 'document'
           });
           ctx.npcs.interact('elena', 25, 30);
-          ctx.game.addLog('"这意味着，实验从一开始就被设计为失败的，"Elena 轻声说，"最高层知道会有死亡。他们在等一个阈值——看我们能支撑多久。"', 'danger');
-          ctx.game.addLog('"现在，你和我都成为了这个秘密的共谋者。祝你好运。"', 'warning');
+          ctx.game.addLog('Elena 说，实验从一开始就给失败预留了格式，真正缺的只是谁来把这份格式拆开。', 'danger');
+          ctx.game.addLog('你把文件收起来时，已经知道自己之后再也不可能只把这里当成一座牢。', 'warning');
+        },
+        nextSceneId: 'explore_hall_main'
+      }
+    ]
+  },
+
+  'quest_sasha_keepsake_repaid': {
+    id: 'quest_sasha_keepsake_repaid',
+    locationId: 'mess_hall',
+    type: 'story',
+    text: '清洗过去后，Sasha 主动在食堂角落等你。她把那枚吊坠擦得干净了些，链扣却已经彻底坏掉。她看了很久，最后把里面那张小照片拆了出来，折成更小的一片塞回你手里。',
+    actions: [
+      {
+        id: 'accept_sasha_keepsake',
+        label: '把那片照片收下',
+        timeCost: 0.5,
+        variant: 'accent',
+        effect: (ctx) => {
+          ctx.game.flags.sasha_keepsake_scene = true;
+          ctx.game.flags.arc6_sasha_anchor = true;
+          ctx.npcs.interact('sasha', 10, 12);
+          ctx.game.player.stats.sanity = Math.min(ctx.game.player.stats.maxSanity, ctx.game.player.stats.sanity + 4);
+          ctx.game.addLog('Sasha 说：“要是后面真能出去，至少得有人记得我们不是一开始就只剩编号。”', 'story');
+        },
+        nextSceneId: 'explore_mess_hall'
+      }
+    ]
+  },
+  'quest_aris_medicine_repaid': {
+    id: 'quest_aris_medicine_repaid',
+    locationId: 'med_bay',
+    type: 'story',
+    text: 'Aris 在药架后面叫住你。他递来的不是药，而是一张被折过很多次的小纸条，上面记着几类伤员被优先转运时的顺序和常见反应。',
+    actions: [
+      {
+        id: 'take_aris_note',
+        label: '把纸条记住',
+        timeCost: 0.75,
+        variant: 'accent',
+        effect: (ctx) => {
+          ctx.game.flags.aris_mercy_repaid = true;
+          ctx.game.flags.arc6_aris_passage_hint = true;
+          ctx.npcs.interact('aris', 10, 10);
+          ctx.game.player.stats.intelligence += 1;
+          ctx.game.addLog('Aris 只说了一句：“真到了最后，别把还能走的人和还想活的人看成一回事。”', 'warning');
+        },
+        nextSceneId: 'explore_med_bay'
+      }
+    ]
+  },
+  'quest_satoshi_route_repaid': {
+    id: 'quest_satoshi_route_repaid',
+    locationId: 'cell_02',
+    type: 'story',
+    text: '档案被烧掉后，Satoshi 把残图又拉了一遍。这次他没有急着讲屏幕上的门，而是指着一条几乎被删空的回收支路，示意你记住那串断掉的编号。',
+    actions: [
+      {
+        id: 'memorize_satoshi_route',
+        label: '把那串编号背下来',
+        timeCost: 0.75,
+        variant: 'accent',
+        effect: (ctx) => {
+          ctx.game.flags.arc6_satoshi_route_shared = true;
+          ctx.game.player.stats.intelligence += 1;
+          ctx.npcs.interact('satoshi', 8, 10);
+          ctx.game.addLog('Satoshi 低声说，那条路不是给人准备的，但也正因为这样，最后关头反而可能没人先去堵。', 'warning');
+        },
+        nextSceneId: 'explore_cell_02'
+      }
+    ]
+  },
+  'quest_sasha_memory_lost': {
+    id: 'quest_sasha_memory_lost',
+    locationId: 'mess_hall',
+    type: 'story',
+    text: '清洗之后，Sasha 还是会下意识摸一把自己胸前空着的位置。她发现你在看时，先愣了一下，随即把手收回去，像是怕被人撞见自己还在记着什么。',
+    actions: [
+      {
+        id: 'leave_sasha_silence',
+        label: '什么也别说',
+        timeCost: 0.5,
+        variant: 'default',
+        effect: (ctx) => {
+          ctx.game.flags.sasha_failure_seen = true;
+          ctx.game.flags.arc6_sasha_distance = true;
+          ctx.npcs.interact('sasha', -8, -10);
+          ctx.game.player.stats.sanity -= 3;
+          ctx.game.addLog('Sasha 没提吊坠，也没提那张照片。她只是把口粮掰得更碎，像在把某段日子磨没。', 'warning');
+        },
+        nextSceneId: 'explore_mess_hall'
+      }
+    ]
+  },
+  'quest_aris_patient_lost': {
+    id: 'quest_aris_patient_lost',
+    locationId: 'med_bay',
+    type: 'story',
+    text: 'Aris 把一张白布往上拉了一点，刚好盖住床上那人的脸。他没抬头，也没对你解释，只是在转身时把手洗了很久，像是洗不掉那点迟到的时间。',
+    actions: [
+      {
+        id: 'watch_aris_work',
+        label: '站着看完',
+        timeCost: 0.75,
+        variant: 'default',
+        effect: (ctx) => {
+          ctx.game.flags.aris_failure_seen = true;
+          ctx.game.flags.arc6_aris_regret = true;
+          ctx.npcs.interact('aris', -10, -12);
+          ctx.game.player.stats.sanity -= 4;
+          ctx.game.addLog('Aris 最后只说了一句：“这里很多人不是死在今天，是死在前几天没人肯递出去的那一口。”', 'warning');
+        },
+        nextSceneId: 'explore_med_bay'
+      }
+    ]
+  },
+  'quest_satoshi_signal_lost': {
+    id: 'quest_satoshi_signal_lost',
+    locationId: 'cell_02',
+    type: 'story',
+    text: 'Satoshi 的床位还在，可那台终端已经彻底黑了。外壳被人撬开过，里面缺掉最关键的几块。床板上只剩一道被反复擦拭过的划痕，像有人一度还不肯认输。',
+    actions: [
+      {
+        id: 'leave_dead_terminal',
+        label: '把视线移开',
+        timeCost: 0.5,
+        variant: 'default',
+        effect: (ctx) => {
+          ctx.game.flags.satoshi_failure_seen = true;
+          ctx.game.flags.arc6_satoshi_void = true;
+          ctx.game.player.stats.sanity -= 3;
+          ctx.game.addLog('你忽然意识到，有些路不是被堵死的，而是当初根本没人把第一块零件递过去。', 'warning');
+        },
+        nextSceneId: 'explore_cell_02'
+      }
+    ]
+  },
+  'quest_elena_distance_set': {
+    id: 'quest_elena_distance_set',
+    locationId: 'hall_main',
+    type: 'story',
+    text: '白衣人重新出现后，Elena 只是远远看了你一眼，没有再靠近。她怀里那本本子已经比从前厚了很多，可里面不再有任何一页会为你留下空栏。',
+    actions: [
+      {
+        id: 'accept_elena_distance',
+        label: '让她走过去',
+        timeCost: 0.5,
+        variant: 'default',
+        effect: (ctx) => {
+          ctx.game.flags.elena_failure_seen = true;
+          ctx.game.flags.arc6_elena_distance = true;
+          ctx.npcs.interact('elena', -12, -10);
+          ctx.game.addLog('她什么都没说。可你看得出来，那份本来可能递到你手里的东西，已经被她改成了别的去处。', 'warning');
         },
         nextSceneId: 'explore_hall_main'
       }

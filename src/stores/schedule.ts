@@ -1,15 +1,14 @@
-import { defineStore } from 'pinia'
+﻿import { defineStore } from 'pinia'
 
 export interface DayConfig {
   weather?: 'sunny' | 'rainy' | 'foggy' | 'blood_mist';
   isRestDay: boolean;
-  mainPlotId?: string; // 强制触发的主线剧情 ID
-  optionalHooks: string[]; // 预留留白：可触发的支线任务或偶遇 ID
+  mainPlotId?: string;
+  optionalHooks: string[];
 }
 
 export const useScheduleStore = defineStore('schedule', {
   state: () => ({
-    // 90天日程映射表
     calendar: {
       1: { isRestDay: true, mainPlotId: 'awake', optionalHooks: [] },
       2: { isRestDay: true, mainPlotId: 'daily_inspection', weather: 'foggy', optionalHooks: [] },
@@ -49,16 +48,56 @@ export const useScheduleStore = defineStore('schedule', {
       43: { isRestDay: true, mainPlotId: 'day43_final_shortage', optionalHooks: [] },
       44: { isRestDay: true, mainPlotId: 'day44_vote_warning', optionalHooks: [] },
       45: { isRestDay: false, mainPlotId: 'energy_crisis_start', optionalHooks: [] },
+      46: { isRestDay: true, mainPlotId: 'day46_after_blackout', optionalHooks: [] },
+      47: { isRestDay: true, mainPlotId: 'day47_hunt_notice', optionalHooks: [] },
+      48: { isRestDay: true, mainPlotId: 'day48_tagged_beds', optionalHooks: [] },
+      49: { isRestDay: true, mainPlotId: 'day49_whisper_network', optionalHooks: [] },
+      50: { isRestDay: true, mainPlotId: 'day50_supply_frisk', optionalHooks: [] },
+      51: { isRestDay: true, mainPlotId: 'day51_friend_or_witness', optionalHooks: [] },
+      52: { isRestDay: true, mainPlotId: 'day52_smoke_test', optionalHooks: [] },
+      53: { isRestDay: true, mainPlotId: 'day53_quiet_transfer', optionalHooks: [] },
+      54: { isRestDay: true, mainPlotId: 'day54_hidden_census', optionalHooks: [] },
+      55: { isRestDay: true, mainPlotId: 'day55_last_safe_corner', optionalHooks: [] },
+      56: { isRestDay: true, mainPlotId: 'day56_names_removed', optionalHooks: [] },
+      57: { isRestDay: true, mainPlotId: 'day57_route_rehearsal', optionalHooks: [] },
+      58: { isRestDay: true, mainPlotId: 'day58_lock_test', optionalHooks: [] },
+      59: { isRestDay: true, mainPlotId: 'day59_purge_eve', optionalHooks: [] },
       60: { isRestDay: false, mainPlotId: 'the_great_purge_start', optionalHooks: [] },
+      61: { isRestDay: true, mainPlotId: 'day61_empty_tables', optionalHooks: [] },
+      62: { isRestDay: true, mainPlotId: 'day62_spoils_list', optionalHooks: [] },
+      63: { isRestDay: true, mainPlotId: 'day63_marcus_invitation', optionalHooks: [] },
+      64: { isRestDay: true, mainPlotId: 'day64_quiet_clinic', optionalHooks: [] },
+      65: { isRestDay: true, mainPlotId: 'day65_terminal_archive', optionalHooks: [] },
+      66: { isRestDay: true, mainPlotId: 'day66_ration_festival', optionalHooks: [] },
+      67: { isRestDay: true, mainPlotId: 'day67_debtor_roll', optionalHooks: [] },
+      68: { isRestDay: true, mainPlotId: 'day68_false_pardon', optionalHooks: [] },
+      69: { isRestDay: true, mainPlotId: 'day69_inner_circle', optionalHooks: [] },
+      70: { isRestDay: true, mainPlotId: 'day70_scent_of_meat', optionalHooks: [] },
+      71: { isRestDay: true, mainPlotId: 'day71_broker_last_prices', optionalHooks: [] },
+      72: { isRestDay: true, mainPlotId: 'day72_seating_rehearsal', optionalHooks: [] },
+      73: { isRestDay: true, mainPlotId: 'day73_cutlery_count', optionalHooks: [] },
+      74: { isRestDay: true, mainPlotId: 'day74_last_whispers', optionalHooks: [] },
       75: { isRestDay: false, mainPlotId: 'the_last_supper_start', optionalHooks: [] },
-      // 16-89天 可以在日后开发中动态补充
-      // 预留大规模留白区...
+      76: { isRestDay: true, mainPlotId: 'day76_blood_on_tiles', optionalHooks: [] },
+      77: { isRestDay: true, mainPlotId: 'day77_succession_notice', optionalHooks: [] },
+      78: { isRestDay: true, mainPlotId: 'day78_archive_burn', optionalHooks: [] },
+      79: { isRestDay: true, mainPlotId: 'day79_outer_gate_hum', optionalHooks: [] },
+      80: { isRestDay: true, mainPlotId: 'day80_last_medicine', optionalHooks: [] },
+      81: { isRestDay: true, mainPlotId: 'day81_selection_interviews', optionalHooks: [] },
+      82: { isRestDay: true, mainPlotId: 'day82_sky_on_screen', optionalHooks: [] },
+      83: { isRestDay: true, mainPlotId: 'day83_food_for_names', optionalHooks: [] },
+      84: { isRestDay: true, mainPlotId: 'day84_terminal_map', optionalHooks: [] },
+      85: { isRestDay: true, mainPlotId: 'day85_open_air_rumor', optionalHooks: [] },
+      86: { isRestDay: true, mainPlotId: 'day86_last_sorting', optionalHooks: [] },
+      87: { isRestDay: true, mainPlotId: 'day87_white_coats_return', optionalHooks: [] },
+      88: { isRestDay: true, mainPlotId: 'day88_door_test', optionalHooks: [] },
+      89: { isRestDay: true, mainPlotId: 'day89_final_night', optionalHooks: [] },
       90: { isRestDay: false, mainPlotId: 'grand_finale', optionalHooks: [] }
     } as Record<number, DayConfig>
   }),
   getters: {
     getDayConfig: (state) => (day: number): DayConfig => {
-      return state.calendar[day] || { isRestDay: true, optionalHooks: [] }; // 默认留白
+      return state.calendar[day] || { isRestDay: true, optionalHooks: [] };
     }
   }
 })

@@ -1,5 +1,9 @@
-# Vue 3 + TypeScript + Vite
+# modern-mud
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+现代黑暗生存文字冒险项目。
 
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+## 文档
+
+- `PLOT_OUTLINE.md`：整体剧情大纲
+- `DEVELOPMENT_PLAN.md`：开发进度与模块规划
+- `NARRATIVE_GUIDELINES.md`：剧情设计约束与叙事统一规范

@@ -86,6 +86,85 @@ export function useGameShell() {
       if (targetId === 'cell_02' && gameStore.flags.has_satoshi_part && !gameStore.flags.satoshi_allied) {
         triggerScene('quest_satoshi_complete'); return
       }
+      // Sasha 支线: 吊坠
+      if (
+        targetId === 'garbage_chute' &&
+        gameStore.flags.sasha_locket_active &&
+        !gameStore.flags.has_sasha_locket
+      ) {
+        triggerScene('quest_sasha_locket_find'); return
+      }
+      if (
+        targetId === 'mess_hall' &&
+        gameStore.flags.has_sasha_locket &&
+        !gameStore.flags.sasha_locket_returned
+      ) {
+        triggerScene('quest_sasha_locket_return'); return
+      }
+      if (
+        targetId === 'mess_hall' &&
+        gameStore.game.day >= 61 &&
+        gameStore.flags.sasha_saved &&
+        gameStore.flags.sasha_locket_returned &&
+        !gameStore.flags.sasha_keepsake_scene
+      ) {
+        triggerScene('quest_sasha_keepsake_repaid'); return
+      }
+      if (
+        targetId === 'mess_hall' &&
+        gameStore.game.day >= 61 &&
+        gameStore.flags.sasha_saved &&
+        !gameStore.flags.sasha_locket_returned &&
+        (gameStore.flags.sasha_locket_active || gameStore.flags.sasha_locket_refused || gameStore.flags.has_sasha_locket) &&
+        !gameStore.flags.sasha_failure_seen
+      ) {
+        triggerScene('quest_sasha_memory_lost'); return
+      }
+      if (
+        targetId === 'med_bay' &&
+        gameStore.game.day >= 64 &&
+        gameStore.flags.aris_saved &&
+        gameStore.flags.aris_ration_given &&
+        !gameStore.flags.aris_mercy_repaid
+      ) {
+        triggerScene('quest_aris_medicine_repaid'); return
+      }
+      if (
+        targetId === 'med_bay' &&
+        gameStore.game.day >= 64 &&
+        gameStore.flags.aris_quest_done &&
+        !gameStore.flags.aris_ration_given &&
+        !gameStore.flags.aris_failure_seen
+      ) {
+        triggerScene('quest_aris_patient_lost'); return
+      }
+      if (
+        targetId === 'cell_02' &&
+        gameStore.game.day >= 84 &&
+        gameStore.flags.satoshi_allied &&
+        gameStore.flags.arc6_archive_fragments &&
+        !gameStore.flags.arc6_satoshi_route_shared
+      ) {
+        triggerScene('quest_satoshi_route_repaid'); return
+      }
+      if (
+        targetId === 'cell_02' &&
+        gameStore.game.day >= 55 &&
+        !gameStore.flags.satoshi_allied &&
+        (gameStore.flags.satoshi_quest_active || gameStore.flags.satoshi_refused || gameStore.flags.satoshi_part_missed) &&
+        !gameStore.flags.satoshi_failure_seen
+      ) {
+        triggerScene('quest_satoshi_signal_lost'); return
+      }
+      if (
+        targetId === 'hall_main' &&
+        gameStore.game.day >= 87 &&
+        !gameStore.flags.elena_quest_complete &&
+        (gameStore.flags.elena_brief_rejected || gameStore.flags.elena_task_declined || gameStore.flags.elena_quest_active) &&
+        !gameStore.flags.elena_failure_seen
+      ) {
+        triggerScene('quest_elena_distance_set'); return
+      }
 
       // --- Grey 的剧情弧线触发 ---
       if (gameStore.flags.companion_met && gameStore.game.day >= 7 && !gameStore.flags.grey_d7_done && targetId === 'corridor_a') {
@@ -210,6 +289,15 @@ export function useGameShell() {
       if (Math.random() < 0.3) {
         if (targetId === 'cell_02' && !gameStore.flags.satoshi_quest_active) {
           triggerScene('quest_satoshi_start'); return
+        }
+        if (
+          targetId === 'corridor_a' &&
+          gameStore.game.day >= 5 &&
+          !gameStore.flags.sasha_locket_active &&
+          !gameStore.flags.sasha_locket_returned &&
+          !gameStore.flags.has_sasha_locket
+        ) {
+          triggerScene('quest_sasha_locket_start'); return
         }
         if (targetId === 'med_bay' && gameStore.game.day > 11 && !gameStore.flags.aris_quest_done) {
           triggerScene('quest_aris_plea'); gameStore.flags.aris_quest_done = true; return
