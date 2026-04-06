@@ -57,12 +57,15 @@ export function useScriptValidator() {
 
       checkedScenes.add(sceneId);
 
+      const actionsRaw = scene.actions;
+      const actions = typeof actionsRaw === 'function' ? [] : (actionsRaw ?? []);
+
       // 检查 scene 本身的逻辑出口
-      if (scene.actions && scene.actions.length > 0) {
-        for (const action of scene.actions) {
+      if (actions.length > 0) {
+        for (const action of actions) {
           if (action.nextSceneId) {
             const nextSceneId = typeof action.nextSceneId === 'function'
-              ? null  // 函数式的 nextSceneId，无法静态检查
+              ? (action.defaultNextSceneId || null)
               : action.nextSceneId;
 
             if (nextSceneId && !sceneIdSet.has(nextSceneId)) {
@@ -89,9 +92,11 @@ export function useScriptValidator() {
         }
 
         let hasValidExit = false;
-
-        if (scene.actions && scene.actions.length > 0) {
-          for (const action of scene.actions) {
+        const actionsRaw = scene.actions;
+        if (typeof actionsRaw === 'function') {
+          hasValidExit = true; // 动态 actions 默认视为有出口
+        } else if (actionsRaw && actionsRaw.length > 0) {
+          for (const action of actionsRaw) {
             if (action.nextSceneId) {
               hasValidExit = true;
             } else {

@@ -40,6 +40,7 @@ export interface GameState {
   hunger: number;
   nextDeadlineDay: number | null;
   objective: string;
+  currentSceneId: string | null;
 }
 
 export interface MapNode {
@@ -115,6 +116,7 @@ export const useGameStore = defineStore('game', {
       hunger: 58,
       nextDeadlineDay: 2,
       objective: '醒来，活下去',
+      currentSceneId: 'awake',
     } as GameState,
     combat: {
       active: false,
@@ -126,14 +128,16 @@ export const useGameStore = defineStore('game', {
     } as CombatState,
     flags: {
       hoursSinceLastRest: 0,
-      exploredLocations: ['cell_01'] as string[], // 新增: 探索过的位置
+      exploredLocations: ['cell_01'] as string[],
     } as Record<string, any>,
     inventory: [
       { id: 'ration', name: '合成口粮', description: '一块硬得像石头的压缩饼干。', icon: 'package', quantity: 1, category: 'consumable' },
       { id: 'iron_pipe', name: '生锈的铁管', description: '虽然简陋但致命。', icon: 'zap', quantity: 1, category: 'weapon', damage: 10 }
     ] as InventoryItem[],
     logs: [] as LogEntry[],
-    _lastSave: 0, // 新增：记录上次存档时间
+    _lastSave: 0,
+    plants: [] as any[],
+    storage: [] as any[],
     mapNodes: [
       { id: 'cell_01',    col: 2, row: 2, label: '牢房 01', state: 'current', connections: ['corridor_a'] },
       { id: 'corridor_a', col: 4, row: 2, label: '走廊 Alpha', state: 'locked',  connections: ['cell_01', 'hall_main', 'cell_02'] },
@@ -152,6 +156,7 @@ export const useGameStore = defineStore('game', {
       this.player.gender = playerData.gender;
       this.player.traits = playerData.traits;
       this.player.stats = { ...playerData.stats };
+      this.player.equippedWeapon = null;
       this.game.started = true;
       this.game.energy = 100;
       this.game.hunger = 58;
@@ -170,7 +175,6 @@ export const useGameStore = defineStore('game', {
     addLog(text: string, type: NarrativeEntry['type'] = 'info') {
       const id = `n-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
       const entry = { id, time: Date.now(), text, type };
-      // 若末尾是未选择的行动条目，将叙事插入其前，避免日志出现在按钮下方
       const last = this.logs[this.logs.length - 1];
       if (last && last.type === 'actions' && !last.resolvedId) {
         this.logs.splice(this.logs.length - 1, 0, entry);
@@ -194,9 +198,92 @@ export const useGameStore = defineStore('game', {
       }
     },
 
+    fixSceneStuck(sceneId: string) {
+      const flagKey = `scene_triggered_${sceneId}`;
+      if (this.flags[flagKey]) {
+        delete this.flags[flagKey];
+        this.addLog('[系统] 检测到剧情阻塞，已尝试重置当前场景触发状态。', 'warning');
+      }
+    },
+
+    waterPlant(index: number) {
+      if (this.plants[index]) {
+        this.plants[index].lastWateredDay = this.game.day;
+        this.plants[index].health = Math.min(100, this.plants[index].health + 15);
+        this.addLog(`你给 ${this.plants[index].name} 浇了水。在那一小圈湿润的泥土中，你感到了某种安宁。`, 'info');
+      }
+    },
+
+    harvestPlant(index: number) {
+      const plant = this.plants[index];
+      if (plant && plant.stage === 3) {
+        const productMap: Record<string, any> = {
+          'mystery_seeds': { id: 'healing_herb', name: '疗愈草', description: '虽然在这暗无天日的地方长大，但它依然充满了生命力。', icon: 'leaf', quantity: 1, category: 'consumable' },
+        };
+        const product = productMap[plant.seedId] || { id: 'dried_plant', name: '枯萎的残留物', description: '没什么用。', icon: 'trash', quantity: 1, category: 'misc' };
+        this.inventory.push(product);
+        this.addLog(`你收获了 ${plant.name}。`, 'info');
+        this.plants.splice(index, 1);
+      }
+    },
+
+    plantSeed(seedId: string) {
+      const maxSlots = this.flags.planting_slots_expanded ? 4 : 2;
+      if (this.plants.length >= maxSlots) {
+        this.addLog('没有多余的空位可以种植了。', 'warning');
+        return;
+      }
+      const seedIdx = this.inventory.findIndex(i => i.id === seedId);
+      if (seedIdx === -1) return;
+
+      const seedNames: Record<string, string> = { 'mystery_seeds': '神秘的幼苗' };
+      this.plants.push({
+        id: `p-${Date.now()}`,
+        name: seedNames[seedId] || '未知名植物',
+        seedId,
+        stage: 0,
+        growthProgress: 0,
+        lastWateredDay: this.game.day,
+        health: 100
+      });
+
+      if (this.inventory[seedIdx].quantity > 1) this.inventory[seedIdx].quantity--;
+      else this.inventory.splice(seedIdx, 1);
+      this.addLog(`你将种子埋进了土里。在这个铁笼子里，这看起来像是一场豪赌。`, 'info');
+    },
+
+    storeToBox(itemId: string) {
+      const idx = this.inventory.findIndex(i => i.id === itemId);
+      if (idx === -1) return;
+      const item = this.inventory[idx];
+      this.storage.push({ ...item, quantity: 1 });
+      if (item.quantity > 1) item.quantity--;
+      else this.inventory.splice(idx, 1);
+      this.addLog(`你把 ${item.name} 藏进了秘密储物槽。`, 'info');
+    },
+
+    retrieveFromBox(itemId: string) {
+      const idx = this.storage.findIndex(i => i.id === itemId);
+      if (idx === -1) return;
+      const item = this.storage[idx];
+      this.inventory.push({ ...item, quantity: 1 });
+      if (item.quantity > 1) item.quantity--;
+      else this.storage.splice(idx, 1);
+      this.addLog(`你取回了 ${item.name}。`, 'info');
+    },
+
     consumeTime(hours: number) {
+      if (isNaN(hours) || hours <= 0) return;
       this.game.time += hours;
       this.applyHungerDecay(hours * 1.6);
+
+      if (this.game.location === 'cell_01' && this.plants.length > 0) {
+        const sanityGain = Math.floor(this.plants.filter((p: any) => p.stage > 0).length * (hours * 1.5)); 
+        if (sanityGain > 0) {
+          this.player.stats.sanity = Math.min(this.player.stats.maxSanity, this.player.stats.sanity + sanityGain);
+        }
+      }
+
       if (typeof this.flags.hoursSinceLastRest === 'number') {
         this.flags.hoursSinceLastRest += hours;
         if (this.flags.hoursSinceLastRest > 18) {
@@ -231,6 +318,41 @@ export const useGameStore = defineStore('game', {
       }
 
       this.game.day += 1;
+
+      this.plants.forEach((p: any) => {
+        const daysWithoutWater = this.game.day - p.lastWateredDay;
+        if (daysWithoutWater > 0) {
+          p.health -= 20;
+        }
+        
+        if (p.health <= 0) {
+          p.stage = -1;
+        } else {
+          const growthBonus = daysWithoutWater === 0 ? 35 : 5; 
+          p.growthProgress += growthBonus;
+          if (p.growthProgress >= 100) {
+            p.growthProgress = 0;
+            if (p.stage < 3) p.stage++;
+          }
+        }
+      });
+      
+      const deadCount = this.plants.filter((p: any) => p.stage === -1).length;
+      if (deadCount > 0) {
+        this.addLog(`你有 ${deadCount} 株植物枯死了。牢房里最后一丝绿色也消失了。`, 'danger');
+        this.player.stats.sanity = Math.max(0, this.player.stats.sanity - 10 * deadCount);
+        this.plants = this.plants.filter((p: any) => p.stage !== -1);
+      }
+
+      if (this.storage.length > 0 && !this.flags.storage_locked) {
+        if (Math.random() < 0.15) { 
+          const stolenIdx = Math.floor(Math.random() * this.storage.length);
+          const item = this.storage[stolenIdx];
+          this.addLog(`你回来时发现储物柜被人撬开了。你的 ${item.name} 不见了。`, 'danger');
+          this.storage.splice(stolenIdx, 1);
+        }
+      }
+
       const scheduleStore = useScheduleStore();
       const config = scheduleStore.getDayConfig(this.game.day);
       this.game.energy = Math.max(0, this.game.energy - 12);
@@ -246,6 +368,7 @@ export const useGameStore = defineStore('game', {
         this.game.weather = weathers[Math.floor(Math.random() * weathers.length)];
       }
       this.addLog(`新的一天开始了。今天是第 ${this.game.day} 天。`, 'info');
+      
       if (this.game.nextDeadlineDay) {
         const remaining = this.game.nextDeadlineDay - this.game.day;
         if (remaining === 0) {
@@ -255,7 +378,6 @@ export const useGameStore = defineStore('game', {
         }
       }
 
-      // 处理可选偶遇钩子：如果有mainPlotId则优先触发，否则随机触发可选偶遇
       if (config.optionalHooks && config.optionalHooks.length > 0 && !config.mainPlotId) {
         if (Math.random() < 0.6) {
           const hook = config.optionalHooks[Math.floor(Math.random() * config.optionalHooks.length)];
@@ -279,7 +401,6 @@ export const useGameStore = defineStore('game', {
       if (next) { 
         next.state = 'current'; 
         this.game.location = nodeId; 
-        // 记录探索
         if (!this.flags.exploredLocations.includes(nodeId)) {
           this.flags.exploredLocations.push(nodeId);
         }
@@ -307,7 +428,6 @@ export const useGameStore = defineStore('game', {
     processCombatTurn(actionId: 'atk' | 'def' | 'skill') {
       if (!this.combat.active) return;
 
-      // 玩家回合
       let playerDmg = 0;
       const roll = Math.floor(Math.random() * 20) + 1;
       
@@ -325,14 +445,12 @@ export const useGameStore = defineStore('game', {
         this.addLog(`你摆出了防御姿态。`, 'info');
       }
 
-      // 检查胜利
       if (this.combat.enemyHp <= 0) {
         this.combat.active = false;
         this.addLog(`胜利！你击败了 ${this.combat.enemyName}。`, 'info');
         return 'win';
       }
 
-      // 敌人回合
       const enemyRoll = Math.floor(Math.random() * 20) + 1;
       let enemyDmg = Math.floor(this.combat.enemyAtk + (enemyRoll / 4));
       if (actionId === 'def') enemyDmg = Math.floor(enemyDmg / 2);
@@ -342,7 +460,6 @@ export const useGameStore = defineStore('game', {
       this.player.stats.sanity = Math.max(0, this.player.stats.sanity - sanityHit);
       this.addLog(`${this.combat.enemyName} 反击，对你造成了 ${enemyDmg} 点伤害。（SAN -${sanityHit}）`, 'danger');
 
-      // 检查失败
       if (this.player.stats.hp <= 0) {
         this.combat.active = false;
         this.addLog(`你倒下了……`, 'danger');
@@ -353,12 +470,13 @@ export const useGameStore = defineStore('game', {
 
     saveGame(slot: string = 'auto') {
       const now = Date.now();
-      if (now - this._lastSave < 1000) return; // 1秒防抖
+      if (now - this._lastSave < 1000) return;
       this._lastSave = now;
 
       const saveData = {
         player: this.player, game: this.game, flags: this.flags,
         inventory: this.inventory, logs: this.logs, mapNodes: this.mapNodes,
+        plants: this.plants, storage: this.storage,
         timestamp: now
       };
       try {
@@ -373,22 +491,28 @@ export const useGameStore = defineStore('game', {
       if (!raw) return false;
       try {
         const data = JSON.parse(raw);
-        // 断开旧数据的引用连接，防止响应式污染
         this.player = { ...data.player }; 
         this.game = { ...data.game }; 
         this.flags = { ...data.flags };
         this.inventory = [...data.inventory]; 
         this.logs = [...data.logs]; 
         this.mapNodes = [...data.mapNodes];
+        this.plants = data.plants ? [...data.plants] : [];
+        this.storage = data.storage ? [...data.storage] : [];
 
-        // 核心数值二次校验
         if (typeof this.game.day !== 'number' || isNaN(this.game.day)) this.game.day = 1;
         if (typeof this.game.time !== 'number' || isNaN(this.game.time)) this.game.time = 8;
         if (this.game.time >= 24) this.game.time = 0;
 
         if (typeof this.game.hunger !== 'number') this.game.hunger = 58;
-        if (typeof this.game.nextDeadlineDay !== 'number' && this.game.nextDeadlineDay !== null) this.game.nextDeadlineDay = null;
         this.updateDeadlineInfo();
+
+        const lastEntry = this.logs[this.logs.length - 1];
+        if (lastEntry && lastEntry.type === 'actions' && !lastEntry.resolvedId && lastEntry.choices.length === 0) {
+           if (this.game.currentSceneId) {
+             this.fixSceneStuck(this.game.currentSceneId);
+           }
+        }
         return true;
       } catch (e) { 
         console.error('[GameStore] Load failed:', e);
@@ -409,8 +533,13 @@ export const useGameStore = defineStore('game', {
       const item = this.inventory[index];
       
       if (item.category === 'weapon') {
-        this.player.equippedWeapon = item.id;
-        this.addLog(`你装备了 ${item.name}。`, 'info');
+        if (this.player.equippedWeapon === item.id) {
+          this.player.equippedWeapon = null;
+          this.addLog(`你卸下了 ${item.name}。`, 'info');
+        } else {
+          this.player.equippedWeapon = item.id;
+          this.addLog(`你装备了 ${item.name}。`, 'info');
+        }
         return;
       }
 

@@ -5,6 +5,7 @@ export const day01Plots: Record<string, PlotScene> = {
     id: 'awake',
     locationId: 'cell_01',
     type: 'story',
+    repeatable: true,
     text: '你的意识在冰冷的震颤中苏醒。后脑勺传来的钝痛像是有根钉子钉在那里。你躺在坚硬的金属板床上，四周只有排气扇单调的嗡鸣。嘴里残留着铁锈般的血腥味，你甚至不记得自己是谁，为什么会在这儿。',
     onEnter: (ctx) => {
       ctx.game.setObjective('弄清楚当前的处境');
@@ -26,6 +27,7 @@ export const day01Plots: Record<string, PlotScene> = {
     id: 'monologue_intro',
     locationId: 'cell_01',
     type: 'story',
+    repeatable: true,
     text: '你在黑暗中深呼吸。混乱的碎片开始闪现：穿着白大褂的人影、刺耳的警报、还有那种被当作某种“资源”的恐惧感。你意识到，留在这里只有死路一条。你需要食物，需要积分，更需要搞清楚这个名为“秩序之眼”的实验到底在选拔什么。',
     onEnter: (ctx) => {
       ctx.game.player.stats.sanity = Math.min(ctx.game.player.stats.maxSanity, ctx.game.player.stats.sanity + 5);
@@ -39,6 +41,7 @@ export const day01Plots: Record<string, PlotScene> = {
     id: 'found_note',
     locationId: 'cell_01',
     type: 'info',
+    repeatable: true,
     text: '你在破烂的枕头下面发现了一张揉皱的纸条。上面歪歪扭扭地写着一行小字：“不要相信穿着白色制服的人，他们不是来救你的。”这句话让你不寒而栗。',
     actions: [
       { 
@@ -57,6 +60,7 @@ export const day01Plots: Record<string, PlotScene> = {
     id: 'wall_scratches',
     locationId: 'cell_01',
     type: 'story',
+    repeatable: true,
     text: '墙上的抓痕在昏暗的光线下显得狰狞。你顺着痕迹摸索，指尖触到了一个名字：“林...夕...”。在触碰到这个名字的瞬间，你感到一阵没由来的哀伤，仿佛这个名字曾对你至关重要。',
     actions: [
       { 

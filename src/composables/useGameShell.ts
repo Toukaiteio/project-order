@@ -25,7 +25,7 @@ export function useGameShell() {
   const dialogStore = useDialogStore()
   const npcStore = useNPCStore()
   const { player, game, logs, inventory, mapNodes, combat } = storeToRefs(gameStore)
-  const { triggerScene, handleAction, checkSceneExists } = usePlot()
+  const { triggerScene, handleAction, checkSceneExists, fixCurrentScene } = usePlot()
 
   const mode = ref<GameMode>('loading')
   const tab = ref<TabId>('story')
@@ -36,6 +36,7 @@ export function useGameShell() {
   const weatherName = computed(() => WEATHER_NAMES[game.value.weather] ?? '未知')
   const weatherIcon = computed(() => resolveWeatherIcon())
   const locationName = computed(() => LOCATION_NAMES[game.value.location] ?? game.value.location)
+  const equippedWeapon = computed(() => player.value.equippedWeapon)
 
   const handleNavClick = (item: (typeof NAV_ITEMS)[number]) => {
     if (item.sidebar) {
@@ -317,7 +318,13 @@ export function useGameShell() {
   const handleMenuAction = (type: 'new' | 'continue' | 'settings') => {
     if (type === 'new') mode.value = 'creation'
     else if (type === 'continue') {
-      if (gameStore.loadGame()) mode.value = 'playing'
+      if (gameStore.loadGame()) {
+        mode.value = 'playing';
+        // 加载后的关键重绘：如果存档记录了场景，立即重刷该场景以生成按钮
+        if (gameStore.game.currentSceneId) {
+          triggerScene(gameStore.game.currentSceneId);
+        }
+      }
     }
   }
 
@@ -343,6 +350,7 @@ export function useGameShell() {
     navItems: NAV_ITEMS,
     onCreationComplete,
     player,
+    equippedWeapon,
     selectedItem,
     sidebarOpen,
     tab,
@@ -350,6 +358,7 @@ export function useGameShell() {
     weatherName,
     formattedTime,
     executeAction,
+    fixCurrentScene,
     useItem: (id: string) => gameStore.useItem(id),
   }
 }

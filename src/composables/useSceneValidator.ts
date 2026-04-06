@@ -60,18 +60,37 @@ export function useSceneValidator() {
 
       checkedScenes.add(sceneId);
 
-      const actions = scene.actions ?? [];
+      let actions: any[] = [];
+      if (typeof scene.actions === 'function') {
+        // 对于函数式 actions，静态验证暂时跳过深层检查，或使用占位数组
+        actions = []; 
+      } else {
+        actions = scene.actions ?? [];
+      }
 
       // ── 检查1：nextSceneId 指向不存在的 scene ──────────────────────────
       for (const action of actions) {
         if (!action.nextSceneId) continue;
 
         if (typeof action.nextSceneId === 'function') {
+          // 如果提供了默认 ID，则验证默认 ID 而不是报警
+          if (action.defaultNextSceneId) {
+            if (!sceneIdSet.has(action.defaultNextSceneId)) {
+              errors.push({
+                type: 'missing_scene',
+                sceneId,
+                actionId: action.id,
+                details: `[断链] "${sceneId}" → action "${action.id}" 的默认出口 "${action.defaultNextSceneId}" 不存在。`,
+              });
+            }
+            continue; // 验证通过，跳过警告
+          }
+
           warnings.push({
             type: 'dynamic_transition',
             sceneId,
             actionId: action.id,
-            details: `[动态出口] "${sceneId}" → action "${action.id}" 使用函数式 nextSceneId，无法静态验证目标是否存在。`,
+            details: `[动态出口] "${sceneId}" → action "${action.id}" 使用函数式 nextSceneId 且缺失 defaultNextSceneId，无法静态验证。`,
           });
           continue;
         }
@@ -108,7 +127,12 @@ export function useSceneValidator() {
 
       if (TERMINAL_SCENES.has(sceneId) || SPECIAL_SCENES.has(sceneId)) continue;
 
-      const actions = scene.actions ?? [];
+      const actionsRaw = scene.actions;
+      if (typeof actionsRaw === 'function') {
+        // 函数式 actions 默认视为有出口，且跳过死路验证（因为它是动态的）
+        continue;
+      }
+      const actions = actionsRaw ?? [];
 
       // 3a：完全没有出口
       const hasAnyExit = actions.some(a => !!a.nextSceneId);
@@ -132,6 +156,66 @@ export function useSceneValidator() {
           type: 'conditional_dead_end',
           sceneId,
           details: `[条件死路] "${sceneId}" 的所有出口 action 均附带 condition（${conditionedIds}），若条件均不满足将导致玩家在运行时卡死。请确保至少有一个无条件兜底出口。`,
+        });
+      }
+    }
+
+    // ── 检查4：循环引用与重复进入风险 (Cycle Detection) ──────────────
+    // 建立邻接表以便进行路径追踪
+    const adjList = new Map<string, Set<string>>();
+    for (const id of sceneIdSet) {
+      const scene = getSceneDetails(id) as PlotScene | undefined;
+      if (!scene) continue;
+      
+      const targets = new Set<string>();
+      // 这里的 actions 解析逻辑需要处理函数式或数组
+      const rawActions = typeof scene.actions === 'function' ? [] : (scene.actions ?? []);
+      for (const act of rawActions) {
+        if (typeof act.nextSceneId === 'string') targets.add(act.nextSceneId);
+        if (act.defaultNextSceneId) targets.add(act.defaultNextSceneId);
+      }
+      if (targets.size > 0) adjList.set(id, targets);
+    }
+
+    // 使用简单的 DFS 检测每个场景是否参与了某种形式的回路
+    const hasBackReference = (startId: string) => {
+      const visited = new Set<string>();
+      const stack = [startId];
+      while (stack.length > 0) {
+        const curr = stack.pop()!;
+        const neighbors = adjList.get(curr);
+        if (!neighbors) continue;
+        for (const next of neighbors) {
+          if (next === startId) return true; // 发现回路：A -> ... -> A
+          if (!visited.has(next)) {
+            visited.add(next);
+            stack.push(next);
+          }
+        }
+      }
+      return false;
+    };
+
+    for (const id of sceneIdSet) {
+      const scene = getSceneDetails(id) as PlotScene | undefined;
+      if (!scene || scene.repeatable) continue;
+
+      // 规则 A: 地点探索 hub 场景强烈建议可重复
+      if (id.startsWith('explore_')) {
+        warnings.push({
+          type: 'logic_error',
+          sceneId: id,
+          details: `[高风险] 地点探索场景 "${id}" 未标记为 repeatable。玩家第二次通过正常路径返回该地点时，行动列表将消失。`
+        });
+        continue;
+      }
+
+      // 规则 B: 如果检测到该非重复场景参与了跳转回路，发出警告
+      if (hasBackReference(id)) {
+        warnings.push({
+          type: 'logic_error',
+          sceneId: id,
+          details: `[循环风险] 场景 "${id}" 参与了跳转回路（例如 A->B->A），但未标记为 repeatable。这会导致第二次进入时产生逻辑死路。`
         });
       }
     }

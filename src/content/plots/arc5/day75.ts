@@ -51,6 +51,7 @@ export const day75Plots: Record<string, PlotScene> = {
     id: 'marcus_battle_loop',
     locationId: 'hall_main',
     type: 'warning',
+    repeatable: true,
     text: (ctx) => {
       if (!ctx.game.combat.active) {
         return '战斗结束了。长桌还在，热气却已经散干净了。';

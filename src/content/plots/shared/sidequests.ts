@@ -481,5 +481,125 @@ export const sideQuests: Record<string, PlotScene> = {
         nextSceneId: 'explore_hall_main'
       }
     ]
+  },
+
+  // --- 新增系统解锁支线 ---
+
+  'quest_unlock_planting_start': {
+    id: 'quest_unlock_planting_start',
+    locationId: 'mess_hall',
+    type: 'story',
+    text: 'Sasha 盯着你手里的种子（如果你有的话），眼神里闪过一丝你从未见过的光亮。“这些东西……如果你能给它们一点泥土，它们真的能长出来。我有办法弄到一些‘干净’的土，但作为交换，你得帮我从大厅弄点干净的水过来。”',
+    condition: (ctx) => ctx.game.inventory.some((i: any) => i.id === 'mystery_seeds') && !ctx.game.flags.planting_unlocked,
+    actions: [
+      {
+        id: 'accept_planting_quest', label: '答应帮她弄水', timeCost: 0.5, variant: 'accent',
+        effect: (ctx) => {
+          ctx.game.flags.planting_quest_active = true;
+          ctx.game.addLog('Sasha 递给你一个破旧的塑料瓶。“别让守卫看见你在接水，他们会觉得你在搞破坏。”', 'info');
+        },
+        nextSceneId: 'explore_mess_hall'
+      }
+    ]
+  },
+
+  'quest_planting_get_water': {
+    id: 'quest_planting_get_water',
+    locationId: 'hall_main',
+    type: 'warning',
+    text: '趁守卫转身的空档，你来到了中央供水处。如果你动作够快，可以接满这一小瓶水。',
+    condition: (ctx) => ctx.game.flags.planting_quest_active && !ctx.game.flags.has_planting_water,
+    actions: [
+      {
+        id: 'fill_water_stealth', label: '快速接水', timeCost: 0.5, variant: 'danger',
+        effect: (ctx) => {
+          const check = ctx.game.rollCheck(ctx.game.player.stats.dexterity, 10);
+          if (check.success) {
+            ctx.game.flags.has_planting_water = true;
+            ctx.game.addLog('你接满了水，并迅速把瓶子藏进了袖口。没有被发现。', 'info');
+          } else {
+            ctx.game.player.stats.hp -= 5;
+            ctx.game.addLog('守卫吼了你一声，你被推开了。水瓶掉在了地上，你只能等下次机会。', 'warning');
+          }
+        },
+        nextSceneId: 'explore_hall_main'
+      }
+    ]
+  },
+
+  'quest_planting_complete': {
+    id: 'quest_planting_complete',
+    locationId: 'mess_hall',
+    type: 'story',
+    text: 'Sasha 接过水瓶，像对待珍宝一样把它藏好。她从怀里掏出一包用旧布包着的暗红色泥土。“这是从废料区最深处淘出来的……虽然不好闻，但它能让生命活下去。把它铺在你的床底下吧。”',
+    condition: (ctx) => ctx.game.flags.has_planting_water,
+    actions: [
+      {
+        id: 'finish_planting_quest', label: '接过泥土', timeCost: 1.0, variant: 'accent',
+        effect: (ctx) => {
+          ctx.game.flags.planting_unlocked = true;
+          ctx.game.addLog('你获得了“培养基”。现在你可以在牢房里进行小规模的种植了。', 'info');
+          ctx.npcs.interact('sasha', 15, 10);
+        },
+        nextSceneId: 'explore_mess_hall'
+      }
+    ]
+  },
+
+  'quest_unlock_storage_start': {
+    id: 'quest_unlock_storage_start',
+    locationId: 'cell_02',
+    type: 'story',
+    text: 'Satoshi 看着你狼狈的样子，指了指你床下的阴影。“别把所有东西都带在身上。大厅里那些眼神不怀好意的人，迟早会盯上你。我能教你弄个隐蔽的储物槽，但你得从废料区给我弄个‘弹簧拉簧’过来。”',
+    condition: (ctx) => ctx.game.game.day >= 10 && !ctx.game.flags.storage_unlocked,
+    actions: [
+      {
+        id: 'accept_storage_quest', label: '我会留意的', timeCost: 0.25, variant: 'accent',
+        effect: (ctx) => {
+          ctx.game.flags.storage_quest_active = true;
+        },
+        nextSceneId: 'explore_cell_02'
+      }
+    ]
+  },
+
+  'quest_storage_complete': {
+    id: 'quest_storage_complete',
+    locationId: 'cell_02',
+    type: 'story',
+    text: 'Satoshi 接过你找到的弹簧，三两下就把一个废弃的电子元件改造成了一个精巧的锁扣。“把它装在你床板后面的暗格里。虽然防不住所有人，但普通的小偷绝对发现不了。”',
+    condition: (ctx) => ctx.game.flags.storage_quest_active && ctx.game.inventory.some((i: any) => i.id === 'precision_tools'),
+    actions: [
+      {
+        id: 'finish_storage_quest', label: '学习制作技巧', timeCost: 1.5, variant: 'accent',
+        effect: (ctx) => {
+          ctx.game.flags.storage_unlocked = true;
+          ctx.game.addLog('你学会了如何制作秘密储物槽。现在你可以把暂时不用的物资藏在牢房里了。', 'info');
+          ctx.game.player.stats.dexterity += 1;
+        },
+        nextSceneId: 'explore_cell_02'
+      }
+    ]
+  },
+
+  'quest_get_lock_start': {
+    id: 'quest_get_lock_start',
+    locationId: 'warehouse_back',
+    type: 'warning',
+    text: '掮客看你最近似乎藏了不少好东西，嘿嘿一笑。“你需要一把真锁，伙计。不是 Satoshi 那种手工活，而是那种守卫都没法轻易撬开的工业锁。只要 50 积分，它就是你的。”',
+    condition: (ctx) => ctx.game.flags.storage_unlocked && !ctx.game.flags.storage_locked,
+    actions: [
+      {
+        id: 'buy_storage_lock', label: '购买重型挂锁 (50 积分)', timeCost: 0.5, variant: 'accent',
+        condition: (ctx) => ctx.game.game.money >= 50,
+        effect: (ctx) => {
+          ctx.game.game.money -= 50;
+          ctx.game.flags.storage_locked = true;
+          ctx.game.addLog('这把沉甸甸的挂锁给了你极大的安全感。现在，你的储物柜再也不会失窃了。', 'info');
+        },
+        nextSceneId: 'explore_warehouse_back'
+      },
+      { id: 'refuse_lock', label: '太贵了', timeCost: 0.1, variant: 'default', nextSceneId: 'explore_warehouse_back' }
+    ]
   }
 };

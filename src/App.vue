@@ -34,11 +34,13 @@
           :weather-name="weatherName"
           :combat="combat"
           @execute-action="executeAction"
+          @fix-stuck="fixCurrentScene"
         />
 
         <InventoryPanel
           :active="tab === 'inventory'"
           :inventory="inventory"
+          :equipped-weapon="equippedWeapon"
           @use-item="useItem"
         />
       </main>
@@ -93,11 +95,13 @@ const {
   navItems,
   onCreationComplete,
   player,
+  equippedWeapon,
   sidebarOpen,
   tab,
   weatherIcon,
   weatherName,
   useItem,
+  fixCurrentScene,
 } = useGameShell()
 </script>
 

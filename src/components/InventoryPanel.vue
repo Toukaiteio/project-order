@@ -19,14 +19,17 @@
         <div
           v-for="item in inventory"
           :key="item.id"
-          class="inv-item"
+          :class="['inv-item', { 'is-equipped': item.id === equippedWeapon }]"
           @click="selectedItem = item"
         >
           <div class="ii-icon-wrap">
             <Package :size="18" />
           </div>
           <div class="ii-info">
-            <span class="ii-name">{{ item.name }}</span>
+            <div class="ii-name-row">
+              <span class="ii-name">{{ item.name }}</span>
+              <span v-if="item.id === equippedWeapon" class="ii-eq-tag">已装备</span>
+            </div>
             <span class="ii-desc">{{ item.description }}</span>
           </div>
           <div class="ii-right">
@@ -54,10 +57,10 @@
           </button>
           <button 
             v-if="selectedItem.category === 'weapon'"
-            class="use-btn"
+            :class="['use-btn', { 'unequip-btn': selectedItem.id === equippedWeapon }]"
             @click="handleUse"
           >
-            装备武器
+            {{ selectedItem.id === equippedWeapon ? '卸下武器' : '装备武器' }}
           </button>
         </div>
       </div>
@@ -73,10 +76,13 @@ import { ref, watch } from 'vue'
 import { ChevronRight, Package, X } from 'lucide-vue-next'
 import type { InventoryItem } from '../stores/game'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   active: boolean
   inventory: InventoryItem[]
-}>()
+  equippedWeapon?: string | null
+}>(), {
+  equippedWeapon: null
+})
 
 const emit = defineEmits<{
   useItem: [id: string]
@@ -87,7 +93,7 @@ const selectedItem = ref<InventoryItem | null>(null)
 const handleUse = () => {
   if (selectedItem.value) {
     emit('useItem', selectedItem.value.id)
-    selectedItem.value = null
+    // 移除 selectedItem.value = null; 以便观察状态变化
   }
 }
 
@@ -204,7 +210,27 @@ watch(
   gap: 3px;
 }
 
+.ii-name-row { display: flex; align-items: center; gap: 8px; }
 .ii-name { font-size: 0.9rem; font-weight: 600; color: var(--text-primary); }
+.ii-eq-tag {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--accent-primary);
+  background-color: rgba(44, 110, 168, 0.1);
+  padding: 1px 5px;
+  border-radius: 3px;
+  text-transform: uppercase;
+}
+
+.inv-item.is-equipped {
+  background-color: rgba(44, 110, 168, 0.03);
+}
+
+.inv-item.is-equipped .ii-icon-wrap {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
 .ii-desc {
   font-size: 0.75rem;
   color: var(--text-muted);
@@ -299,5 +325,15 @@ watch(
 .use-btn:active {
   transform: scale(0.95);
   background-color: var(--accent-bright);
+}
+
+.unequip-btn {
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+
+.unequip-btn:active {
+  background-color: var(--bg-tertiary);
 }
 </style>

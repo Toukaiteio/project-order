@@ -58,7 +58,7 @@
                 <span class="ia-div-line"></span>
               </div>
 
-              <div class="ia-grid">
+              <div v-if="entry.choices.length > 0" class="ia-grid">
                 <button
                   v-for="choice in entry.choices"
                   :key="choice.id"
@@ -72,6 +72,12 @@
                     <span class="ia-label">{{ choice.label }}</span>
                     <span v-if="choice.timeCost > 0" class="ia-cost">{{ formatDuration(choice.timeCost) }}</span>
                   </div>
+                </button>
+              </div>
+              <div v-else class="ia-stuck-fix">
+                <p class="ia-stuck-hint">当前节点暂时没有更多行动了...</p>
+                <button class="ia-fix-btn" @click="emit('fixStuck')">
+                  尝试重置此场景
                 </button>
               </div>
             </template>
@@ -101,7 +107,8 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  executeAction: [entry: ActionsEntry, choice: ActionChoice]
+  executeAction: [entry: ActionsEntry, choice: ActionChoice],
+  fixStuck: []
 }>()
 
 const logEl = ref<HTMLElement | null>(null)
@@ -233,4 +240,28 @@ onMounted(() => {
 .ia-accent .ia-ico { color: var(--accent-primary); }
 .ia-danger { border-color: rgba(184,50,40,0.3); background-color: rgba(184,50,40,0.05); }
 .ia-danger .ia-ico { color: var(--accent-red); }
+
+.ia-stuck-fix {
+  padding: 20px; margin: 10px 0;
+  text-align: center;
+  background-color: rgba(184, 150, 40, 0.05);
+  border: 1px dashed var(--accent-amber);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  animation: entryIn 0.3s ease-out both;
+}
+.ia-stuck-hint { font-size: 0.78rem; color: var(--text-muted); }
+.ia-fix-btn {
+  background-color: var(--accent-amber);
+  color: #000;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 8px 24px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+.ia-fix-btn:active { transform: scale(0.95); opacity: 0.8; }
 </style>

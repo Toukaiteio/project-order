@@ -6,6 +6,7 @@ export const trainingPlots: Record<string, PlotScene> = {
     id: 'train_strength_game',
     locationId: 'cell_01',
     type: 'story',
+    repeatable: true,
     text: '你撑在冰冷的地板上，汗水滴在铁锈缝隙里。你已经完成了基础组，感到肌肉正在灼烧。你想再挑战一组极限吗？(训练会显著消耗理智与体力)',
     actions: [
       { 
@@ -43,6 +44,7 @@ export const trainingPlots: Record<string, PlotScene> = {
     id: 'train_dexterity_game',
     locationId: 'cell_01',
     type: 'story',
+    repeatable: true,
     text: '铁片在空中晃动。你需要全神贯注，在它交叠的一瞬间将其抓住。高度集中注意力会让你感到疲惫。',
     actions: [
       { 
@@ -69,6 +71,7 @@ export const trainingPlots: Record<string, PlotScene> = {
     id: 'train_intelligence_game',
     locationId: 'cell_01',
     type: 'story',
+    repeatable: true,
     text: '这道逻辑残题极其复杂，似乎涉及某种高等概率论。强行解题可能会导致剧烈的偏头痛。',
     actions: [
       { 

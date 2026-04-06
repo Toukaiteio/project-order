@@ -5,6 +5,7 @@ export const npcInteractionPlots: Record<string, PlotScene> = {
     id: 'npc_menu_general',
     locationId: 'any',
     type: 'story',
+    repeatable: true,
     text: (ctx) => {
       const npcId = ctx.game.flags.interacting_npc_id;
       if (!npcId) return '你面前空无一人。';
@@ -67,7 +68,8 @@ export const npcInteractionPlots: Record<string, PlotScene> = {
         // 无 nextSceneId：战斗行动由 enterCombat 内部注入，接管后续流程
       },
       { id: 'npc_leave', label: '离开', timeCost: 0.1, variant: 'default',
-        nextSceneId: (ctx) => `explore_${ctx.game.game.location}`
+        nextSceneId: (ctx) => `explore_${ctx.game.game.location}`,
+        defaultNextSceneId: 'explore_hall_main'
       }
     ]
   }

@@ -332,6 +332,7 @@ export const companionPlots: Record<string, PlotScene> = {
     id: 'shop_broker',
     locationId: 'warehouse_back',
     type: 'story',
+    repeatable: true,
     text: '掮客坐在一堆板箱上，吸着一支不知名的土烟。"只要你有积分，或者等值的玩意儿，我这儿什么都有。既然是新面孔，我给你开个友情价。"',
     actions: [
       { id: 'buy_ration', label: (ctx: any) => `购买口粮 (成本: ${ctx.game.flags.broker_discount ? 15 : 20} 积分)`, timeCost: 0.25, variant: 'default',

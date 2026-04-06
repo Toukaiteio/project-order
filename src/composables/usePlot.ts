@@ -1,8 +1,8 @@
-import { ref, computed, watch } from 'vue';
+import { ref, computed } from 'vue';
 import { useGameStore } from '../stores/game';
-import { useDialogStore } from '../stores/dialog';
 import { useNPCStore } from '../stores/npcs';
-import { useScheduleStore } from '../stores/schedule';
+import { useDialogStore } from '../stores/dialog';
+import type { PlotScene, PlotAction, PlotEffectContext } from '../types/plot';
 import { day01Plots } from '../content/plots/arc1/day01';
 import { day02Plots } from '../content/plots/arc1/day02';
 import { day03Plots } from '../content/plots/arc1/day03';
@@ -94,22 +94,19 @@ import { day88Plots } from '../content/plots/arc6/day88';
 import { day89Plots } from '../content/plots/arc6/day89';
 import { day90Plots } from '../content/plots/arc6/day90';
 import { companionPlots } from '../content/plots/shared/companion';
-import { trainingPlots } from '../content/plots/shared/training';
-import { npcInteractionPlots } from '../content/plots/shared/npc_interaction';
-import { systemPlots } from '../content/plots/shared/system_actions';
-import { sideQuests } from '../content/plots/shared/sidequests';
 import { encounterPlots } from '../content/plots/shared/encounters';
 import { locationExplorationPlots } from '../content/plots/shared/locations';
-import type { PlotScene, PlotAction, PlotEffectContext } from '../types/plot';
-
-// 终点场景白名单（允许没有 actions）
-const TERMINAL_SCENES = new Set(['combat_victory', 'combat_defeat', 'game_over_death', 'game_over_win']);
+import { npcInteractionPlots } from '../content/plots/shared/npc_interaction';
+import { sideQuests } from '../content/plots/shared/sidequests';
+import { systemPlots } from '../content/plots/shared/system_actions';
+import { trainingPlots } from '../content/plots/shared/training';
 
 const questioningPlots: Record<string, PlotScene> = {
   'ask_about_facility': {
     id: 'ask_about_facility',
     locationId: 'hall_main',
     type: 'story',
+    repeatable: true,
     text: '你拦住了一名行色匆匆的囚犯，试图询问这里到底是什么地方。',
     actions: [
       { id: 'ask_marcus_about', label: '询问 Marcus', condition: (ctx) => ctx.game.game.location === 'hall_main', timeCost: 0.5, variant: 'accent',
@@ -125,7 +122,8 @@ const questioningPlots: Record<string, PlotScene> = {
         nextSceneId: 'explore_mess_hall'
       },
       { id: 'back_to_explore', label: '放弃询问', timeCost: 0.1, variant: 'default',
-        nextSceneId: (ctx) => `explore_${ctx.game.game.location}`
+        nextSceneId: (ctx) => `explore_${ctx.game.game.location}`,
+        defaultNextSceneId: 'explore_hall_main'
       }
     ]
   }
@@ -152,49 +150,52 @@ export const ALL_PLOTS: Record<string, PlotScene> = {
   ...day81Plots, ...day82Plots, ...day83Plots, ...day84Plots, ...day85Plots,
   ...day86Plots, ...day87Plots, ...day88Plots, ...day89Plots, ...day90Plots,
   ...companionPlots,
-  ...trainingPlots,
-  ...npcInteractionPlots,
-  ...systemPlots,
-  ...sideQuests,
   ...encounterPlots,
   ...locationExplorationPlots,
+  ...npcInteractionPlots,
+  ...sideQuests,
+  ...systemPlots,
+  ...trainingPlots,
   ...questioningPlots,
 };
 
 export function usePlot() {
-  const gameStore = useGameStore();
-  const dialogStore = useDialogStore();
+  const gameStore = useGameStore() as any;
   const npcStore = useNPCStore();
-  const scheduleStore = useScheduleStore();
-  const currentSceneId = ref('awake');
-  // 记录上一个场景，用于空行动保护机制
-  const previousSceneId = ref('');
-  // 存储当前场景所有有效行动（含动态注入），供 handleAction 查找
+  const dialogStore = useDialogStore();
+
+  const currentSceneId = computed({
+    get: () => gameStore.game.currentSceneId,
+    set: (val) => { gameStore.game.currentSceneId = val; }
+  });
+  const previousSceneId = ref<string | null>(null);
   const currentValidActions = ref<PlotAction[]>([]);
 
   const context: PlotEffectContext = {
     game: gameStore,
     dialog: dialogStore,
     npcs: npcStore,
-    schedule: scheduleStore,
+    schedule: null // 待接入
   };
 
-  // 监听待处理剧情
-  watch(() => gameStore.flags.pendingPlotId, (newPlotId) => {
-    if (newPlotId) {
-      if (!triggerScene(newPlotId as string)) {
-        triggerScene(`explore_${gameStore.game.location}`);
-      }
-      gameStore.flags.pendingPlotId = '';
-    }
+  const currentScene = computed(() => {
+    if (!currentSceneId.value) return null;
+    return ALL_PLOTS[currentSceneId.value] || null;
   });
-
-  const currentScene = computed(() => ALL_PLOTS[currentSceneId.value]);
 
   const triggerScene = (sceneId: string) => {
     const scene = ALL_PLOTS[sceneId];
     if (!scene) {
-      console.error(`[plot] Missing scene: ${sceneId}`);
+      console.error(`[Plot] Scene not found: ${sceneId}`);
+      return false;
+    }
+
+    // --- 重复触发保护逻辑 ---
+    // 默认所有剧情场景都是单次触发的，除非显式标记为 repeatable: true
+    // 特例：如果跳转目标就是当前场景（自循环），允许进入以方便探索同一个场景的不同 action
+    const flagKey = `scene_triggered_${sceneId}`;
+    if (!scene.repeatable && gameStore.flags[flagKey] && currentSceneId.value !== sceneId) {
+      console.log(`[Plot] Scene ${sceneId} has already triggered and is not repeatable.`);
       return false;
     }
 
@@ -207,6 +208,16 @@ export function usePlot() {
     previousSceneId.value = currentSceneId.value;
     currentSceneId.value = sceneId;
 
+    // 同步地理位置并更新地图状态
+    if (scene.locationId && scene.locationId !== 'any' && scene.locationId !== gameStore.game.location) {
+      gameStore.moveTo(scene.locationId);
+    }
+
+    // 标记为已触发
+    if (!scene.repeatable) {
+      gameStore.flags[flagKey] = true;
+    }
+
     // 添加叙事文本
     const text = typeof scene.text === 'function' ? scene.text(context) : scene.text;
     gameStore.addLog(text, scene.type);
@@ -214,8 +225,11 @@ export function usePlot() {
     // 触发进入场景的回调
     if (scene.onEnter) scene.onEnter(context);
 
+    // 基础有效行动获取（处理数组或函数）
+    const rawActions = typeof scene.actions === 'function' ? scene.actions(context) : (scene.actions || []);
+
     // 基础有效行动过滤 (含条件过滤)
-    const validActions: PlotAction[] = [...(scene.actions || []).filter(a => !a.condition || a.condition(context))];
+    const validActions: PlotAction[] = [...rawActions.filter(a => !a.condition || a.condition(context))];
 
     // 注入原地休息逻辑
     if (scene.allowFieldRest) {
@@ -236,7 +250,7 @@ export function usePlot() {
         if (!validActions.some(a => a.id === `interact_${npc.id}`)) {
           validActions.push({
             id: `interact_${npc.id}`,
-            label: `与 ${npc.name} 互动`,
+            label: `寻找 ${npc.name}`,
             timeCost: 0.1,
             variant: 'accent',
             effect: (ctx) => {
@@ -245,20 +259,6 @@ export function usePlot() {
             nextSceneId: 'npc_menu_general'
           });
         }
-      });
-    }
-
-    // --- 【运行时死锁保护：流程自愈】 ---
-    if (validActions.length === 0 && !TERMINAL_SCENES.has(sceneId)) {
-      console.warn(`[Plot] Self-healing naming for scene: ${sceneId}`);
-      gameStore.addLog(`[系统监测到流程中断，已启动自愈机制]`, 'warning');
-      
-      validActions.push({
-        id: '_emergency_fallback',
-        label: '重整态势 (尝试回到牢房)',
-        timeCost: 0.1,
-        variant: 'default',
-        nextSceneId: 'explore_cell_01'
       });
     }
 
@@ -279,12 +279,12 @@ export function usePlot() {
     if (!action) return;
 
     if (action.effect) action.effect(context);
-    
+
     if (action.nextSceneId) {
-      const targetId = typeof action.nextSceneId === 'function' 
-        ? action.nextSceneId(context) 
+      const targetId = typeof action.nextSceneId === 'function'
+        ? action.nextSceneId(context)
         : action.nextSceneId;
-      
+
       if (!triggerScene(targetId)) {
         // 回退逻辑
         if (!triggerScene(`explore_${gameStore.game.location}`) && previousSceneId.value) {
@@ -296,12 +296,20 @@ export function usePlot() {
 
   const checkSceneExists = (id: string) => !!ALL_PLOTS[id];
 
+  const fixCurrentScene = () => {
+    if (currentSceneId.value) {
+      gameStore.fixSceneStuck(currentSceneId.value);
+      triggerScene(currentSceneId.value);
+    }
+  };
+
   return {
     currentSceneId,
     currentScene,
     triggerScene,
     handleAction,
     checkSceneExists,
+    fixCurrentScene,
     getAllSceneIds: () => Object.keys(ALL_PLOTS),
     getSceneDetails: (id: string) => ALL_PLOTS[id],
   };
