@@ -532,35 +532,6 @@ export const encounterPlots: Record<string, PlotScene> = {
       }
     ]
   },
-
-  // --- Grey 初次偶遇（未接纳前的选择机会） ---
-  'encounter_grey_before_met': {
-    id: 'encounter_grey_before_met',
-    locationId: 'corridor_a',
-    type: 'story',
-    text: '一个穿着宽大灰色连帽衫的人在黑暗的走廊角落缓缓转过身。他的眼神很清澈，但眼底有某种深邃的疲惫。"你还活着。很多人没有。"他轻声说。',
-    actions: [
-      {
-        id: 'follow_grey', label: '跟随他了解更多', timeCost: 1.0, variant: 'accent',
-        condition: (ctx) => !ctx.game.flags.companion_met,
-        effect: (ctx) => {
-          ctx.npcs.npcs['grey'].location = 'cell_01';
-          ctx.game.flags.companion_met = true;
-          ctx.game.addLog('他带你回到你的牢房，推开门。"我叫灰。接下来，我们有很多要谈的。"', 'info');
-        },
-        nextSceneId: 'companion_intro'
-      },
-      {
-        id: 'ignore_grey', label: '匆匆离开', timeCost: 0.25, variant: 'default',
-        condition: (ctx) => !ctx.game.flags.companion_met,
-        effect: (ctx) => {
-          ctx.game.addLog('灰没有追上来。你只是听到他在身后低声说："不愿意接纳帮助的人，往往活不久。"', 'warning');
-        },
-        nextSceneId: 'explore_corridor_a'
-      }
-    ]
-  },
-
   // --- 囚犯打斗现场 ---
   'encounter_prisoner_brawl': {
     id: 'encounter_prisoner_brawl',

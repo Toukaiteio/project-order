@@ -73,9 +73,9 @@ export function useGameShell() {
       // 检查探索度并触发伙伴登场
       const initialLocations = ['cell_01', 'corridor_a', 'hall_main', 'med_bay', 'mess_hall', 'garbage_chute', 'cell_02'];
       const exploredCount = gameStore.flags.exploredLocations.filter((l: string) => initialLocations.includes(l)).length;
-      
-      if (targetId === 'cell_01' && exploredCount >= 6 && !gameStore.flags.companion_met) {
-        triggerScene('companion_intro'); return;
+
+      if (targetId === 'corridor_a' && exploredCount >= 6 && !gameStore.flags.companion_met && !gameStore.flags.grey_met) {
+        triggerScene('grey_first_notice'); return;
       }
 
       // Satoshi 任务: 寻找零件
@@ -253,10 +253,7 @@ export function useGameShell() {
 
       // --- 2. 概率性剧情触发 (偶遇/幻觉/支线开启) ---
 
-      // Grey 初次偶遇（未接纳前）
-      if (!gameStore.flags.companion_met && targetId === 'corridor_a' && Math.random() < 0.25) {
-        triggerScene('encounter_grey_before_met'); gameStore.saveGame(); return
-      }
+      // 注：Grey 初次偶遇已在探索度触发中处理，不再这里随机触发以避免重复
 
       // 囚犯打斗
       if (targetId === 'corridor_a' && Math.random() < 0.2) {
