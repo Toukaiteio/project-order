@@ -106,8 +106,32 @@ export function useGameShell() {
       if (gameStore.flags.elena_allied && gameStore.game.day === 20 && !gameStore.flags.elena_quest_active && targetId === 'hall_main') {
         triggerScene('elena_day20_brief'); return
       }
-      if (gameStore.flags.elena_quest_active && !gameStore.flags.elena_quest_complete && targetId === 'hall_main' && Math.random() < 0.3) {
+      if (gameStore.flags.elena_quest_active && !gameStore.flags.elena_data_collect_active && !gameStore.flags.elena_quest_complete && targetId === 'hall_main' && Math.random() < 0.3) {
         triggerScene('quest_elena_data_collect'); return
+      }
+
+      if (gameStore.flags.elena_data_collect_active && !gameStore.flags.elena_quest_complete) {
+        if (targetId === 'med_bay' && !gameStore.flags.elena_data_med_bay) {
+          gameStore.flags.elena_data_med_bay = true;
+          gameStore.addLog('你在医疗站翻到一张被药渍浸湿的记录页。上面的日期和人数被人反复圈过。', 'warning');
+        }
+        if (targetId === 'corridor_a' && !gameStore.flags.elena_data_corridor) {
+          gameStore.flags.elena_data_corridor = true;
+          gameStore.addLog('你在走廊尽头听见两个人压低声音提到“回收顺序”。他们说完后同时闭了嘴。', 'warning');
+        }
+        if (targetId === 'hall_main' && !gameStore.flags.elena_data_hall) {
+          gameStore.flags.elena_data_hall = true;
+          gameStore.addLog('大厅守卫换岗时，有人把名单翻到背面匆匆记了一笔。你记住了那一下停顿。', 'warning');
+        }
+
+        if (
+          gameStore.flags.elena_data_med_bay &&
+          gameStore.flags.elena_data_corridor &&
+          gameStore.flags.elena_data_hall &&
+          targetId === 'hall_main'
+        ) {
+          triggerScene('quest_elena_data_complete'); return
+        }
       }
 
       // --- 1.5. 日常事件触发（特定天数） ---
@@ -119,17 +143,33 @@ export function useGameShell() {
         gameStore.flags.daily_d06_done = true;
         triggerScene('daily_d06_food_queue'); return
       }
-      if (gameStore.game.day === 7 && targetId === 'cell_01' && !gameStore.flags.daily_d07_done && Math.random() < 0.3) {
+      if (gameStore.game.day === 7 && targetId === 'cell_01' && !gameStore.flags.daily_d07_done) {
         gameStore.flags.daily_d07_done = true;
         triggerScene('daily_d07_nightmare'); return
       }
-      if (gameStore.game.day === 9 && targetId === 'corridor_a' && !gameStore.flags.daily_d09_done && Math.random() < 0.4) {
+      if (gameStore.game.day === 8 && targetId === 'hall_main' && !gameStore.flags.daily_d08_done) {
+        gameStore.flags.daily_d08_done = true;
+        triggerScene('daily_d08_ration_cut'); return
+      }
+      if (gameStore.game.day === 9 && targetId === 'corridor_a' && !gameStore.flags.daily_d09_done) {
         gameStore.flags.daily_d09_done = true;
         triggerScene('daily_d09_wall_tap'); return
+      }
+      if (gameStore.game.day === 10 && targetId === 'corridor_a' && !gameStore.flags.daily_d10_done) {
+        gameStore.flags.daily_d10_done = true;
+        triggerScene('daily_d10_body_removal'); return
+      }
+      if (gameStore.game.day === 12 && targetId === 'mess_hall' && !gameStore.flags.daily_d12_done) {
+        gameStore.flags.daily_d12_done = true;
+        triggerScene('daily_d12_food_debt'); return
       }
       if (gameStore.game.day === 13 && targetId === 'hall_main' && !gameStore.flags.daily_d13_done) {
         gameStore.flags.daily_d13_done = true;
         triggerScene('daily_d13_white_coat'); return
+      }
+      if (gameStore.game.day === 14 && targetId === 'hall_main' && !gameStore.flags.daily_d14_done) {
+        gameStore.flags.daily_d14_done = true;
+        triggerScene('daily_d14_pre_vote_pressure'); return
       }
 
       // --- 2. 概率性剧情触发 (偶遇/幻觉/支线开启) ---

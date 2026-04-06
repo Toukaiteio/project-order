@@ -10,15 +10,14 @@ export const day02Plots: Record<string, PlotScene> = {
       ctx.game.setObjective('在检查中存活');
       if (!ctx.game.flags.tutorial_checks_done) {
         ctx.game.flags.tutorial_checks_done = true;
-        ctx.game.addLog('【提示：属性检定】系统会根据你的属性和随机骰子结果判定行动是否成功。骰子结果（1-20）加上属性值需要达到或超过难度值。这次的难度是 10。', 'info');
+        ctx.game.addLog('门外有人低声骂了一句：“手脚利索点，不然就等着挨打。”', 'warning');
       }
     },
     actions: [
       { 
-        id: 'hide_items', label: '尝试藏匿违禁品 (敏捷检定)', timeCost: 0.5, variant: 'danger',
+        id: 'hide_items', label: '把东西塞进床板缝里', timeCost: 0.5, variant: 'danger',
         effect: (ctx) => {
           const check = ctx.game.rollCheck(ctx.game.player.stats.dexterity, 10);
-          ctx.game.addLog(`（敏捷检定：${ctx.game.player.stats.dexterity} + ${check.roll} = ${check.total} / 难度 10）`, 'info');
           if (check.success) {
             ctx.game.addLog('你巧妙地利用床板缝隙藏住了纸条。卫兵一无所获，骂骂咧咧地离开了。', 'info');
             ctx.game.player.stats.intelligence += 1;

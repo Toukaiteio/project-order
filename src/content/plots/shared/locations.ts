@@ -11,16 +11,16 @@ export const locationExplorationPlots: Record<string, PlotScene> = {
       
       // 锻炼设施 -> 跳转到小游戏
       {
-        id: 'train_strength', label: '进行力量训练 (强化力量属性)', timeCost: 0.5, variant: 'default', nextSceneId: 'train_strength_game',
+        id: 'train_strength', label: '做一轮力量训练', timeCost: 0.5, variant: 'default', nextSceneId: 'train_strength_game',
         effect: (ctx) => {
           if (!ctx.game.flags.first_training_hint) {
             ctx.game.flags.first_training_hint = true;
-            ctx.game.addLog('【提示：训练机制】每次训练都会消耗时间（小时数），根据成功与否提升相应的属性。力量用于对抗和体力活动，敏捷用于精准操作，智力用于分析和解谜。', 'info');
+            ctx.game.addLog('灰以前说过一句话：在这里，身体和脑子只要有一边先垮掉，另一边也撑不了太久。', 'info');
           }
         }
       },
-      { id: 'train_dexterity', label: '练习反应抓取 (强化敏捷属性)', timeCost: 0.5, variant: 'default', nextSceneId: 'train_dexterity_game' },
-      { id: 'train_intelligence', label: '钻研逻辑难题 (强化智力属性)', timeCost: 0.5, variant: 'default', nextSceneId: 'train_intelligence_game' },
+      { id: 'train_dexterity', label: '练一会儿手上的反应', timeCost: 0.5, variant: 'default', nextSceneId: 'train_dexterity_game' },
+      { id: 'train_intelligence', label: '继续啃那道残题', timeCost: 0.5, variant: 'default', nextSceneId: 'train_intelligence_game' },
 
       { id: 'rest', label: '稍作休息', timeCost: 1.0, variant: 'default', 
         effect: (ctx) => { 
@@ -54,18 +54,18 @@ export const locationExplorationPlots: Record<string, PlotScene> = {
     locationId: 'hall_main',
     type: 'story',
     allowFieldRest: true,
-    text: '设施大厅是整个机构的展示橱窗。摄像头覆盖了每一个角落，照明故意设计得过于明亮，让阴影无处藏身。领取配给的队伍每天排成同样的形状，像是某种仪式。广播系统悬挂在天花板上，偶尔会发出刺耳的反馈音。你在这里说的每一句话，都被人听到了。大厅中央有一块被日常的摩擦磨光的地板，那是囚犯们走过最频繁的轨迹——每个人都试图跟随同样的路线，如同被编程一样。',
+    text: '设施大厅是整个机构的展示橱窗。摄像头覆盖了每一个角落，照明故意设计得过于明亮，让阴影无处藏身。领取配给的队伍每天排成同样的形状，像是某种仪式，而且窗口会在傍晚准时关闭。广播系统悬挂在天花板上，偶尔会发出刺耳的反馈音。你在这里说的每一句话，都被人听到了。大厅中央有一块被日常的摩擦磨光的地板，那是囚犯们走过最频繁的轨迹——每个人都试图跟随同样的路线，如同被编程一样。',
     actions: [
       { id: 'move_corridor_a', label: '返回走廊 Alpha', timeCost: 0.25, variant: 'default', nextSceneId: 'explore_corridor_a' },
       { id: 'move_med_bay', label: '前往医疗站', timeCost: 0.5, variant: 'accent', nextSceneId: 'explore_med_bay' },
       { id: 'move_mess_hall', label: '前往公共食堂', timeCost: 0.5, variant: 'accent', nextSceneId: 'explore_mess_hall' },
       { id: 'move_warehouse_back', label: '潜入秘密仓库', timeCost: 0.75, variant: 'danger', nextSceneId: 'explore_warehouse_back' },
       { id: 'get_ration_daily', label: '领取每日配给', timeCost: 0.5, variant: 'accent', 
-        condition: (ctx) => !ctx.game.flags[`ration_taken_day_${ctx.game.game.day}`],
+        condition: (ctx) => !ctx.game.flags[`ration_taken_day_${ctx.game.game.day}`] && ctx.game.game.time < 18,
         effect: (ctx) => {
           ctx.game.flags[`ration_taken_day_${ctx.game.game.day}`] = true;
           ctx.game.inventory.push({ id: 'ration', name: '合成口粮', description: '虽然难吃，但能救命。', icon: 'package', quantity: 1, category: 'consumable' });
-          ctx.game.addLog('你排队领到了口粮。', 'info');
+          ctx.game.addLog('你赶在配给窗口关闭前领到了口粮。队伍后面传来几声压低的咒骂。', 'info');
         },
         nextSceneId: 'explore_hall_main'
       },

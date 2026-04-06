@@ -9,11 +9,10 @@ export const trainingPlots: Record<string, PlotScene> = {
     text: '你撑在冰冷的地板上，汗水滴在铁锈缝隙里。你已经完成了基础组，感到肌肉正在灼烧。你想再挑战一组极限吗？(训练会显著消耗理智与体力)',
     actions: [
       { 
-        id: 'strength_push_limits', label: '挑战极限 (力量检定)', timeCost: 1.0, variant: 'danger',
+        id: 'strength_push_limits', label: '咬牙再撑一组', timeCost: 1.0, variant: 'danger',
         effect: (ctx) => {
           ctx.game.player.stats.sanity -= 8; // 增加理智消耗
           const check = ctx.game.rollCheck(ctx.game.player.stats.strength, 12);
-          ctx.game.addLog(`（力量检定：${check.roll} + ${ctx.game.player.stats.strength} = ${check.total} / 难度 12）`, 'info');
           if (check.success) {
             const bonus = check.roll >= 18 ? 3 : 2;
             ctx.game.player.stats.strength += bonus;
@@ -47,11 +46,10 @@ export const trainingPlots: Record<string, PlotScene> = {
     text: '铁片在空中晃动。你需要全神贯注，在它交叠的一瞬间将其抓住。高度集中注意力会让你感到疲惫。',
     actions: [
       { 
-        id: 'dexterity_focus', label: '瞬间抓取 (敏捷检定)', timeCost: 1.0, variant: 'accent',
+        id: 'dexterity_focus', label: '盯住轨迹出手', timeCost: 1.0, variant: 'accent',
         effect: (ctx) => {
           ctx.game.player.stats.sanity -= 5;
           const check = ctx.game.rollCheck(ctx.game.player.stats.dexterity, 14);
-          ctx.game.addLog(`（敏捷检定：${check.roll} + ${ctx.game.player.stats.dexterity} = ${check.total} / 难度 14）`, 'info');
           if (check.success) {
             const gain = check.roll >= 19 ? 3 : 1;
             ctx.game.player.stats.dexterity += gain;
@@ -74,10 +72,9 @@ export const trainingPlots: Record<string, PlotScene> = {
     text: '这道逻辑残题极其复杂，似乎涉及某种高等概率论。强行解题可能会导致剧烈的偏头痛。',
     actions: [
       { 
-        id: 'intelligence_solve', label: '深度解析 (智力检定)', timeCost: 1.5, variant: 'accent',
+        id: 'intelligence_solve', label: '硬着头皮推下去', timeCost: 1.5, variant: 'accent',
         effect: (ctx) => {
           const check = ctx.game.rollCheck(ctx.game.player.stats.intelligence, 15);
-          ctx.game.addLog(`（智力检定：${check.roll} + ${ctx.game.player.stats.intelligence} = ${check.total} / 难度 15）`, 'info');
           if (check.success) {
             const gain = check.roll >= 18 ? 3 : 1;
             ctx.game.player.stats.intelligence += gain;

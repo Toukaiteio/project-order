@@ -187,12 +187,11 @@ export const encounterPlots: Record<string, PlotScene> = {
     actions: [
       {
         id: 'intervene_food_theft',
-        label: '出手干预 (力量检定)',
+        label: '伸手把人拦下来',
         timeCost: 0.5,
         variant: 'danger',
         effect: (ctx) => {
           const check = ctx.game.rollCheck(ctx.game.player.stats.strength, 9);
-          ctx.game.addLog(`（力量检定：${check.roll} + ${ctx.game.player.stats.strength} = ${check.total}）`, 'info');
           if (check.success) {
             ctx.game.addLog('你强行夺回了口粮交给老人。那个高大的囚犯愤怒地瞪了你一眼，但在众目睽睽之下没有继续。老人眼中闪过一丝感激。', 'info');
             ctx.npcs.npcs['marcus'].met = true; // 随机 NPC 出现的占位
@@ -251,6 +250,62 @@ export const encounterPlots: Record<string, PlotScene> = {
     ]
   },
 
+  'daily_d08_ration_cut': {
+    id: 'daily_d08_ration_cut',
+    locationId: 'hall_main',
+    type: 'warning',
+    text: '今天的配给队伍异常漫长。扩音器里反复播放着一条冷冰冰的通知：“因贡献率下滑，自今日起，基础口粮下调 30%。”队伍里立刻爆发出压抑的骚动，有人开始偷偷把视线投向别人手里的食物。',
+    onEnter: (ctx) => {
+      ctx.game.addLog('有人把口粮塞进衣服里时，动作快得像在藏刀。', 'danger');
+    },
+    actions: [
+      {
+        id: 'd08_hold_line',
+        label: '硬顶住前面的人',
+        timeCost: 0.75,
+        variant: 'danger',
+        effect: (ctx) => {
+          const check = ctx.game.rollCheck(ctx.game.player.stats.strength, 11);
+          if (check.success) {
+            ctx.game.inventory.push({ id: 'ration', name: '合成口粮', description: '虽然难吃，但能救命。', icon: 'package', quantity: 1, category: 'consumable' });
+            ctx.game.addLog('你没有被挤出队伍，甚至多抢下了一份被踩扁的口粮。周围几道目光因此变得凶狠。', 'warning');
+            ctx.game.game.money += 10;
+          } else {
+            ctx.game.player.stats.hp -= 10;
+            ctx.game.game.hunger = Math.max(0, ctx.game.game.hunger - 8);
+            ctx.game.addLog('你被人群撞开，肋下挨了一记肘击。等你重新站稳时，发放窗口已经关了。', 'danger');
+          }
+        },
+        nextSceneId: 'explore_hall_main'
+      },
+      {
+        id: 'd08_trade_slot',
+        label: '把排位卖给别人',
+        timeCost: 0.5,
+        variant: 'accent',
+        effect: (ctx) => {
+          ctx.game.game.money += 25;
+          ctx.game.player.stats.sanity -= 4;
+          ctx.game.game.hunger = Math.max(0, ctx.game.game.hunger - 10);
+          ctx.game.addLog('你用自己的位置换到了一点积分。口袋沉了一些，胃却更空了。你知道这不是能常做的交易。', 'warning');
+        },
+        nextSceneId: 'explore_hall_main'
+      },
+      {
+        id: 'd08_watch_hungry',
+        label: '观察人群反应',
+        timeCost: 0.5,
+        variant: 'default',
+        effect: (ctx) => {
+          ctx.game.player.stats.intelligence += 1;
+          ctx.game.flags.knows_food_is_currency = true;
+          ctx.game.addLog('你注意到最先失控的不是最虚弱的人，而是那些已经开始囤粮的人。这里的秩序，正在围绕食物重组。', 'warning');
+        },
+        nextSceneId: 'explore_hall_main'
+      }
+    ]
+  },
+
   'daily_d09_wall_tap': {
     id: 'daily_d09_wall_tap',
     locationId: 'corridor_a',
@@ -259,7 +314,7 @@ export const encounterPlots: Record<string, PlotScene> = {
     actions: [
       {
         id: 'decode_morse',
-        label: () => `破译密码 (需要智力 >= 6)`,
+        label: '停下来琢磨这段节奏',
         timeCost: 1.0,
         variant: 'accent',
         condition: (ctx) => ctx.game.player.stats.intelligence >= 6,
@@ -279,6 +334,108 @@ export const encounterPlots: Record<string, PlotScene> = {
           ctx.game.addLog('你听到了这个声音，但意义不明。也许不是密码。也许是某个人已经疯了，在墙上发泄。', 'warning');
         },
         nextSceneId: 'explore_corridor_a'
+      }
+    ]
+  },
+
+  'daily_d10_body_removal': {
+    id: 'daily_d10_body_removal',
+    locationId: 'corridor_a',
+    type: 'warning',
+    text: '两名守卫推着金属担架穿过走廊。上面盖着一块灰布，布的边缘渗出已经发黑的血。你看见担架经过的牢房门上，被白漆刷掉了一个编号，像是那个人从来没有存在过。',
+    onEnter: (ctx) => {
+      ctx.game.addLog('围观的人都很安静。不是因为悲伤，而是因为每个人都在计算：下一个会不会轮到自己。', 'danger');
+    },
+    actions: [
+      {
+        id: 'd10_check_tag',
+        label: '凑近看一眼标签',
+        timeCost: 0.75,
+        variant: 'accent',
+        effect: (ctx) => {
+          const check = ctx.game.rollCheck(ctx.game.player.stats.intelligence, 12);
+          if (check.success) {
+            ctx.game.flags.knows_non_contributor = true;
+            ctx.game.player.stats.intelligence += 2;
+            ctx.game.addLog('你看清了标签上的字样：非贡献者 / 优先移除。担架推远后，那几个字还留在你脑子里。', 'danger');
+          } else {
+            ctx.game.player.stats.sanity -= 5;
+            ctx.game.addLog('你只来得及看见一个打叉的名字。那一瞬间你莫名觉得，那个名字本该是你。', 'warning');
+          }
+        },
+        nextSceneId: 'explore_corridor_a'
+      },
+      {
+        id: 'd10_help_push',
+        label: '帮忙推担架',
+        timeCost: 0.5,
+        variant: 'danger',
+        effect: (ctx) => {
+          ctx.game.player.stats.hp -= 4;
+          ctx.game.player.stats.sanity -= 6;
+          ctx.game.game.money += 15;
+          ctx.game.addLog('守卫默认了你的顺从，塞给你一点积分作为“劳务补贴”。灰布下传来的重量却一直压在你的手腕上。', 'warning');
+        },
+        nextSceneId: 'explore_corridor_a'
+      },
+      {
+        id: 'd10_back_off',
+        label: '退到一边',
+        timeCost: 0.25,
+        variant: 'default',
+        effect: (ctx) => {
+          ctx.game.addLog('你没有上前。但担架轮子碾过地面的声音，还是在你耳边停留了很久。', 'warning');
+        },
+        nextSceneId: 'explore_corridor_a'
+      }
+    ]
+  },
+
+  'daily_d12_food_debt': {
+    id: 'daily_d12_food_debt',
+    locationId: 'mess_hall',
+    type: 'warning',
+    text: '食堂今天没有开灯，只留了一排应急红光。掮客的跑腿人沿桌子挨个敲击金属面板，提醒所有欠账者必须在三天内补足食物差额，否则将被列入“非贡献者”名单。',
+    onEnter: (ctx) => {
+      ctx.game.addLog('没人质疑这份名单是谁定的。你只看见几个人把自己的口粮抱得更紧了。', 'danger');
+    },
+    actions: [
+      {
+        id: 'd12_pay_food_debt',
+        label: '咬牙换下一份口粮',
+        timeCost: 0.5,
+        variant: 'accent',
+        condition: (ctx) => ctx.game.game.money >= 20,
+        effect: (ctx) => {
+          ctx.game.game.money -= 20;
+          ctx.game.inventory.push({ id: 'ration', name: '合成口粮', description: '虽然难吃，但能救命。', icon: 'package', quantity: 1, category: 'consumable' });
+          ctx.game.flags.prepared_food_for_day15 = true;
+          ctx.game.addLog('你用高价换来一份口粮。所有人都知道你在囤货，但至少你还握着选择权。', 'warning');
+        },
+        nextSceneId: 'explore_mess_hall'
+      },
+      {
+        id: 'd12_mark_names',
+        label: '记住被点名的人',
+        timeCost: 0.5,
+        variant: 'default',
+        effect: (ctx) => {
+          ctx.game.player.stats.intelligence += 1;
+          ctx.game.flags.knows_they_count = true;
+          ctx.game.addLog('你默默记下了那几个名字。你突然意识到，明面上的配给表其实也是一张处决预告。', 'warning');
+        },
+        nextSceneId: 'explore_mess_hall'
+      },
+      {
+        id: 'd12_slip_away',
+        label: '趁没人注意离开',
+        timeCost: 0.25,
+        variant: 'default',
+        effect: (ctx) => {
+          ctx.game.game.hunger = Math.max(0, ctx.game.game.hunger - 6);
+          ctx.game.addLog('你不想继续听下去了。但逃开并不会让名单消失。', 'warning');
+        },
+        nextSceneId: 'explore_mess_hall'
       }
     ]
   },
@@ -311,6 +468,65 @@ export const encounterPlots: Record<string, PlotScene> = {
         variant: 'default',
         effect: (ctx) => {
           ctx.game.addLog('你学会了不引起注意。这可能是这个地方最重要的一课。', 'info');
+        },
+        nextSceneId: 'explore_hall_main'
+      }
+    ]
+  },
+
+  'daily_d14_pre_vote_pressure': {
+    id: 'daily_d14_pre_vote_pressure',
+    locationId: 'hall_main',
+    type: 'warning',
+    text: '大厅中央的新告示牌前挤满了人。上面贴出了最新的“贡献排序”，你的名字也在其中。最底部几行被红笔圈了起来，旁边写着一行字：明日统一表决前完成最终评估。',
+    onEnter: (ctx) => {
+      ctx.game.setObjective('在明天的表决前，决定你要靠什么活下来');
+      ctx.game.addLog('直到这一刻，所有人都终于明白，第 15 天的投票并不是突然发生，而是已经筹备了很多天。', 'danger');
+    },
+    actions: [
+      {
+        id: 'd14_study_board',
+        label: '盯着名单看下去',
+        timeCost: 1.0,
+        variant: 'accent',
+        effect: (ctx) => {
+          const check = ctx.game.rollCheck(ctx.game.player.stats.intelligence, 13);
+          if (check.success) {
+            ctx.game.flags.day15_formula_known = true;
+            ctx.game.player.stats.intelligence += 2;
+            ctx.game.addLog('你看了一遍又一遍，终于看出红笔圈住的人几乎都有同一个特点：最近几天，他们不是断过粮，就是没人替他们说话。', 'danger');
+          } else {
+            ctx.game.player.stats.sanity -= 4;
+            ctx.game.addLog('你越看越头疼。表格上的数字像在故意旋转，仿佛它们的目的就是逼人崩溃。', 'warning');
+          }
+        },
+        nextSceneId: 'explore_hall_main'
+      },
+      {
+        id: 'd14_make_presence',
+        label: '当众表明自己不是软柿子',
+        timeCost: 0.75,
+        variant: 'danger',
+        effect: (ctx) => {
+          const check = ctx.game.rollCheck(ctx.game.player.stats.strength, 11);
+          if (check.success) {
+            ctx.game.flags.day15_intimidation = true;
+            ctx.game.addLog('你逼退了两个试图拿你开刀的人。代价是，大厅里每个人都记住了你。', 'warning');
+          } else {
+            ctx.game.player.stats.hp -= 12;
+            ctx.game.addLog('你没能撑住场面，反而被狠狠教训了一顿。明天投票前，你看起来更像个目标。', 'danger');
+          }
+        },
+        nextSceneId: 'explore_hall_main'
+      },
+      {
+        id: 'd14_hide_ration',
+        label: '回去藏好自己的食物',
+        timeCost: 0.5,
+        variant: 'default',
+        effect: (ctx) => {
+          ctx.game.flags.day15_food_hidden = true;
+          ctx.game.addLog('你把身上的口粮重新分藏到几个地方。至少明天来临前，不会有人轻易从你手里拿走它。', 'info');
         },
         nextSceneId: 'explore_hall_main'
       }
@@ -353,10 +569,9 @@ export const encounterPlots: Record<string, PlotScene> = {
     text: '前方传来了沉闷的撞击声和闷哼声。两个囚犯正在互相殴打，周围的人形成了一个圆圈旁观。卫兵们似乎对此习以为常，只是在一旁看着。其中一个人正在处于劣势，血从他的嘴角流出。',
     actions: [
       {
-        id: 'intervene_brawl', label: '冲进去拉开他们 (力量检定)', timeCost: 1.0, variant: 'danger',
+        id: 'intervene_brawl', label: '冲进去把人拽开', timeCost: 1.0, variant: 'danger',
         effect: (ctx) => {
           const check = ctx.game.rollCheck(ctx.game.player.stats.strength, 12);
-          ctx.game.addLog(`（力量检定：${check.roll} + ${ctx.game.player.stats.strength} = ${check.total}）`, 'info');
           if (check.success) {
             ctx.game.addLog('你强行分开了两人。打斗停止了，但周围的人看你的眼神变得奇异。卫兵没有干预，只是冷冷地记录下来。', 'info');
             ctx.game.player.stats.hp -= 5;

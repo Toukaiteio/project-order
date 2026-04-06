@@ -27,7 +27,7 @@ export const sideQuests: Record<string, PlotScene> = {
     text: '巨大的粉碎机正在缓慢转动。你看到在履带的边缘卡着一个闪烁着微弱蓝光的零件。',
     actions: [
       { 
-        id: 'grab_part', label: '尝试抓取 (需要敏捷 >= 6)', timeCost: 1.0, variant: 'danger',
+        id: 'grab_part', label: '伸手去够那个零件', timeCost: 1.0, variant: 'danger',
         condition: (ctx) => ctx.game.player.stats.dexterity >= 6,
         effect: (ctx) => {
           ctx.game.inventory.push({ id: 'electronic_part', name: '电子零件', description: '虽然沾满了油污，但依然在运作。', icon: 'zap', quantity: 1, category: 'tool' });

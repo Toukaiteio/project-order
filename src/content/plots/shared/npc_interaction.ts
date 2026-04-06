@@ -15,7 +15,7 @@ export const npcInteractionPlots: Record<string, PlotScene> = {
     onEnter: (ctx) => {
       if (!ctx.game.flags.tutorial_npc_done) {
         ctx.game.flags.tutorial_npc_done = true;
-        ctx.game.addLog('【提示：NPC 系统】每个 NPC 都有好感度和信任度两个属性。交谈和协作会增加这些值，冲突会降低。不同的好感度级别会解锁不同的对话选项。', 'info');
+        ctx.game.addLog('你很快发现，这里的人记仇也记恩，只是他们很少会把这两样直接写在脸上。', 'info');
       }
     },
     actions: [
@@ -40,11 +40,10 @@ export const npcInteractionPlots: Record<string, PlotScene> = {
         condition: (ctx) => ctx.game.flags.interacting_npc_id === 'broker',
         nextSceneId: 'shop_broker'
       },
-      { id: 'npc_steal', label: '尝试偷窃 (敏捷检定)', timeCost: 0.5, variant: 'danger',
+      { id: 'npc_steal', label: '趁对方不注意伸手', timeCost: 0.5, variant: 'danger',
         effect: (ctx) => {
           const npcId = ctx.game.flags.interacting_npc_id;
           const check = ctx.game.rollCheck(ctx.game.player.stats.dexterity, 15);
-          ctx.game.addLog(`（敏捷检定：${check.roll} + ${ctx.game.player.stats.dexterity} = ${check.total} / 难度 15）`, 'info');
           if (check.success) {
             ctx.game.game.money += 15;
             ctx.npcs.interact(npcId, -10, -20);

@@ -7,11 +7,29 @@ export const day11Plots: Record<string, PlotScene> = {
     type: 'warning',
     text: '广播中传来了刺耳的电流声：“各位参与者，第11天到了。第一个淘汰游戏：囚徒困境。你们面前有两个按钮，‘协作’或‘背叛’。”',
     actions: [
+      { id: 'choice_profile_marcus', label: '先盯着 Marcus 看', timeCost: 1.0, variant: 'accent', condition: (ctx) => ctx.game.player.stats.intelligence >= 8, nextSceneId: 'game_01_result_profile' },
       { id: 'choice_cooperate', label: '选择：协作', timeCost: 1.0, variant: 'accent', nextSceneId: 'game_01_result_coop' },
       { id: 'choice_betray', label: '选择：背叛', timeCost: 1.0, variant: 'danger', nextSceneId: 'game_01_result_betray' },
     ],
     onEnter: (ctx) => {
       ctx.game.addLog('大厅的屏幕上显示出 Marcus T. 的名字，他似乎是你这一轮的对手。', 'warning');
+      if (ctx.game.game.hunger <= 25) {
+        ctx.game.addLog('胃部的空洞感在这一刻显得格外清晰。你讨厌这种状态，因为饥饿会让你在关键判断上慢半拍。', 'danger');
+      }
+    }
+  },
+  'game_01_result_profile': {
+    id: 'game_01_result_profile',
+    locationId: 'hall_main',
+    type: 'story',
+    text: '你没有立刻按下按钮，而是盯着 Marcus 的肩膀和眼神。他显然还不想在第一轮就暴露自己最恶劣的一面。你在最后一秒按下协作，屏幕显示他也做出了同样的选择。',
+    actions: [
+      { id: 'continue', label: '至少这次你看对了', timeCost: 0.5, variant: 'default', nextSceneId: 'explore_hall_main' }
+    ],
+    onEnter: (ctx) => {
+      ctx.npcs.interact('marcus', 15, 25);
+      ctx.game.player.stats.intelligence += 1;
+      ctx.game.addLog('Marcus 多看了你一眼。那不是感激，而是把你视为值得记住的人。', 'warning');
     }
   },
   'game_01_result_coop': {

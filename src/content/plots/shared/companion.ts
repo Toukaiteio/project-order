@@ -116,28 +116,26 @@ export const companionPlots: Record<string, PlotScene> = {
     ]
   },
 
-  // --- 灰的机制引导 ---
+  // --- 灰的引导 ---
   'grey_mechanics_guide': {
     id: 'grey_mechanics_guide',
     locationId: 'cell_01',
     type: 'story',
-    text: '灰用他那沙哑的嗓音开始讲述这个实验的基本规则。他的每一句话都击中要点，就像他曾经无数次重复过这些话。',
+    text: '灰靠在墙边，声音很低，像是怕被什么东西听见。他没有给你答案，只是把几条在这里活久一点的人才会知道的事慢慢说了出来。',
     onEnter: (ctx) => {
       ctx.game.flags.grey_taught_mechanics = true;
     },
     actions: [
       {
         id: 'grey_listen',
-        label: '认真听他讲解',
+        label: '听他继续说下去',
         timeCost: 1.5,
         variant: 'accent',
         effect: (ctx) => {
-          ctx.game.addLog('【灰的生存指南】', 'info');
-          ctx.game.addLog('时间(Time)是一切的基础。每个行动消耗小时数，24小时后进入下一天。无论你做什么，时间都在流逝。', 'info');
-          ctx.game.addLog('三个能力决定了你能做什么：力量让你对抗，敏捷让你躲避和偷窃，智力让你理解这个地方的真相。没有完美的属性，只有选择的代价。', 'info');
-          ctx.game.addLog('理智(Sanity)是脆弱的。每当你目睹不可名状的东西，它就在悄悄剥离。当它低于40时，你会开始看到不存在的东西。我见过理智破碎的人。他们看起来...不像人了。', 'story');
-          ctx.game.addLog('NPC的好感度和信任度决定了他们是帮助你还是出卖你。有些人可以被收买，有些人只在乎自己的存活。学会识人。', 'info');
-          ctx.game.addLog('每天有固定的配给。积分是这里的货币。没有积分，你会饿死。有积分，你可以购买所需的一切。', 'info');
+          ctx.game.addLog('“别总待在一个地方。你以为自己只是走了几步，但天很快就会黑，下一次广播来得比你想的更早。”灰看着天花板，说得像在回忆。', 'story');
+          ctx.game.addLog('“你总得挑一样先练出来。手够硬，别人不敢碰你；动作够快，很多麻烦能躲过去；脑子够清醒，才看得懂他们到底在干什么。”', 'story');
+          ctx.game.addLog('“还有，别太相信自己的眼睛。这个地方会一点点把人掏空。先是睡不好，再是记不清，最后连站在你面前的是人是影子都分不清。”', 'story');
+          ctx.game.addLog('他停了一下，又补了一句：“口粮别乱吃，也别让别人知道你还有多少。这里最先惦记上的，往往不是你这个人，是你今晚能不能撑到明天。”', 'warning');
           ctx.game.player.stats.intelligence += 3;
           ctx.game.setObjective('利用灰的教导提高生存能力');
         },

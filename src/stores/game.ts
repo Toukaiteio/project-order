@@ -37,6 +37,8 @@ export interface GameState {
   location: string;
   money: number;
   energy: number;
+  hunger: number;
+  nextDeadlineDay: number | null;
   objective: string;
 }
 
@@ -110,6 +112,8 @@ export const useGameStore = defineStore('game', {
       location: 'cell_01',
       money: 0,
       energy: 100,
+      hunger: 58,
+      nextDeadlineDay: 2,
       objective: '醒来，活下去',
     } as GameState,
     combat: {
@@ -149,10 +153,13 @@ export const useGameStore = defineStore('game', {
       this.player.stats = { ...playerData.stats };
       this.game.started = true;
       this.game.energy = 100;
+      this.game.hunger = 58;
       this.game.objective = '探索周围的环境';
+      this.updateDeadlineInfo();
       this.flags.hoursSinceLastRest = 0;
       this.flags.exploredLocations = ['cell_01'];
       this.addLog(`你在铁锈味中醒来，记忆的碎片拼凑出你的身份：${this.player.name}。`, 'story');
+      this.addLog('胃里空得发疼。', 'warning');
     },
 
     setObjective(text: string) {
@@ -187,6 +194,7 @@ export const useGameStore = defineStore('game', {
 
     consumeTime(hours: number) {
       this.game.time += hours;
+      this.applyHungerDecay(hours * 1.6);
       if (typeof this.flags.hoursSinceLastRest === 'number') {
         this.flags.hoursSinceLastRest += hours;
         if (this.flags.hoursSinceLastRest > 18) {
@@ -211,6 +219,13 @@ export const useGameStore = defineStore('game', {
     },
 
     advanceDay() {
+      const previousDay = this.game.day;
+      if (!this.flags[`ate_food_day_${previousDay}`]) {
+        this.game.hunger = Math.max(0, this.game.hunger - 12);
+        this.player.stats.sanity = Math.max(0, this.player.stats.sanity - 6);
+        this.addLog('你昨天几乎没有吃东西。胃部痉挛让你醒来时就已经开始发抖。', 'danger');
+      }
+
       this.game.day += 1;
       const scheduleStore = useScheduleStore();
       const config = scheduleStore.getDayConfig(this.game.day);
@@ -220,12 +235,21 @@ export const useGameStore = defineStore('game', {
         this.player.stats.sanity -= 5;
       }
       this.game.isRestDay = config.isRestDay;
+      this.updateDeadlineInfo();
       if (config.weather) this.game.weather = config.weather;
       else {
         const weathers: GameState['weather'][] = ['sunny', 'rainy', 'foggy'];
         this.game.weather = weathers[Math.floor(Math.random() * weathers.length)];
       }
       this.addLog(`新的一天开始了。今天是第 ${this.game.day} 天。`, 'info');
+      if (this.game.nextDeadlineDay) {
+        const remaining = this.game.nextDeadlineDay - this.game.day;
+        if (remaining === 0) {
+          this.addLog('今天就是系统安排的关键节点。你之前做过的准备，现在都要兑现了。', 'danger');
+        } else if (remaining <= 3) {
+          this.addLog(`离下一次强制游戏日只剩 ${remaining} 天。这里不会给你慢慢准备的时间。`, 'warning');
+        }
+      }
 
       // 处理可选偶遇钩子：如果有mainPlotId则优先触发，否则随机触发可选偶遇
       if (config.optionalHooks && config.optionalHooks.length > 0 && !config.mainPlotId) {
@@ -292,7 +316,7 @@ export const useGameStore = defineStore('game', {
         playerDmg = Math.floor((this.player.stats.strength / 5) + (roll / 2) + weaponDmg);
         if (roll === 20) playerDmg *= 2;
         this.combat.enemyHp -= playerDmg;
-        this.addLog(`（力量检定：${roll}）你使用${this.player.equippedWeapon ? '武器' : '徒手'}对敌人造成了 ${playerDmg} 点伤害。`, 'info');
+        this.addLog(`你${this.player.equippedWeapon ? '挥动武器' : '扑上去'}，对敌人造成了 ${playerDmg} 点伤害。`, 'info');
       } else if (actionId === 'def') {
         this.addLog(`你摆出了防御姿态。`, 'info');
       }
@@ -339,13 +363,17 @@ export const useGameStore = defineStore('game', {
         const data = JSON.parse(raw);
         this.player = data.player; this.game = data.game; this.flags = data.flags;
         this.inventory = data.inventory; this.logs = data.logs; this.mapNodes = data.mapNodes;
+        if (typeof this.game.hunger !== 'number') this.game.hunger = 58;
+        if (typeof this.game.nextDeadlineDay !== 'number' && this.game.nextDeadlineDay !== null) this.game.nextDeadlineDay = null;
+        this.updateDeadlineInfo();
         return true;
       } catch (e) { return false; }
     },
 
     rollCheck(statValue: number, difficulty: number): { success: boolean; roll: number; total: number } {
       const roll = Math.floor(Math.random() * 20) + 1;
-      const total = statValue + roll;
+      const hungerPenalty = this.game.hunger <= 15 ? 4 : this.game.hunger <= 30 ? 2 : 0;
+      const total = statValue + roll - hungerPenalty;
       return { success: total >= difficulty, roll, total };
     },
 
@@ -362,8 +390,12 @@ export const useGameStore = defineStore('game', {
 
       let success = false;
       if (item.id === 'ration') {
-        this.player.stats.hp = Math.min(this.player.stats.maxHp, this.player.stats.hp + 15);
-        this.addLog('你吃掉了压缩口粮，体力恢复了一些。', 'info');
+        this.player.stats.hp = Math.min(this.player.stats.maxHp, this.player.stats.hp + 8);
+        this.player.stats.sanity = Math.min(this.player.stats.maxSanity, this.player.stats.sanity + 6);
+        this.game.hunger = Math.min(100, this.game.hunger + 45);
+        this.flags[`ate_food_day_${this.game.day}`] = true;
+        this.clearHungerWarningFlags();
+        this.addLog('你一点点咽下压缩口粮。胃里的灼痛终于缓了下来，思路也重新稳住了。', 'info');
         success = true;
       } else if (item.id === 'adrenaline') {
         this.player.stats.hp = Math.min(this.player.stats.maxHp, this.player.stats.hp + 20);
@@ -381,6 +413,50 @@ export const useGameStore = defineStore('game', {
         if (item.quantity > 1) item.quantity -= 1;
         else this.inventory.splice(index, 1);
       }
+    },
+
+    clearHungerWarningFlags() {
+      delete this.flags[`hunger_warn_45_day_${this.game.day}`];
+      delete this.flags[`hunger_warn_25_day_${this.game.day}`];
+      delete this.flags[`hunger_warn_10_day_${this.game.day}`];
+    },
+
+    applyHungerDecay(amount: number) {
+      const before = this.game.hunger;
+      this.game.hunger = Math.max(0, this.game.hunger - amount);
+
+      if (before > 45 && this.game.hunger <= 45 && !this.flags[`hunger_warn_45_day_${this.game.day}`]) {
+        this.flags[`hunger_warn_45_day_${this.game.day}`] = true;
+        this.addLog('饥饿开始影响你的判断。你发现自己会下意识地盯着别人的口粮看。', 'warning');
+      }
+
+      if (before > 25 && this.game.hunger <= 25 && !this.flags[`hunger_warn_25_day_${this.game.day}`]) {
+        this.flags[`hunger_warn_25_day_${this.game.day}`] = true;
+        this.player.stats.sanity = Math.max(0, this.player.stats.sanity - 4);
+        this.addLog('你已经饿得发虚，动作开始变慢。再这样下去，很多本来能做到的事都会开始失手。', 'danger');
+      }
+
+      if (before > 10 && this.game.hunger <= 10 && !this.flags[`hunger_warn_10_day_${this.game.day}`]) {
+        this.flags[`hunger_warn_10_day_${this.game.day}`] = true;
+        this.player.stats.hp = Math.max(1, this.player.stats.hp - 6);
+        this.player.stats.sanity = Math.max(0, this.player.stats.sanity - 8);
+        this.addLog('胃部像被刀割一样绞紧。你意识到，今天再吃不到东西，任何冲突都可能把你压垮。', 'danger');
+      }
+
+      if (this.game.hunger <= 0) {
+        this.player.stats.hp = Math.max(1, this.player.stats.hp - 5);
+        this.player.stats.sanity = Math.max(0, this.player.stats.sanity - 5);
+        this.addLog('你已经处在断粮状态。视野边缘发黑，连站着都变得困难。', 'danger');
+      }
+    },
+
+    updateDeadlineInfo() {
+      const scheduleStore = useScheduleStore();
+      const futureMainDay = Object.keys(scheduleStore.calendar)
+        .map(Number)
+        .filter(day => day > this.game.day && !!scheduleStore.calendar[day]?.mainPlotId)
+        .sort((a, b) => a - b)[0];
+      this.game.nextDeadlineDay = futureMainDay ?? null;
     }
   },
 });

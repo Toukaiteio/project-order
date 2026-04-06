@@ -14,12 +14,19 @@ export const day15Plots: Record<string, PlotScene> = {
     },
     onEnter: (ctx) => {
       ctx.game.addLog('气氛压抑到了极点。每个人都在用怀疑的目光打量着周围的人。', 'warning');
+      if (ctx.game.flags.day15_formula_known) {
+        ctx.game.addLog('你已经看过那套贡献排序的规则，因此比别人更清楚这场表决背后到底在计算什么。', 'info');
+      }
+      if (ctx.game.game.hunger <= 25) {
+        ctx.game.addLog('空腹让你的耐性被磨得很薄。你知道，今天任何一个冲动都可能把你送上台面。', 'danger');
+      }
     },
     actions: [
       { id: 'vote_marcus', label: '投票给 Marcus T.', timeCost: 1.0, variant: 'danger', nextSceneId: 'vote_result_marcus' },
       { id: 'vote_elena', label: '投票给 Elena V.', timeCost: 1.0, variant: 'danger', nextSceneId: 'vote_result_elena' },
-      { id: 'vote_abstain', label: '投弃权票 (需要智力 >= 40)', timeCost: 1.0, variant: 'accent', condition: (ctx) => ctx.game.player.stats.intelligence >= 40, nextSceneId: 'vote_result_abstain' },
-      { id: 'hallucination_self', label: '投票给自己 (理智 < 20)', timeCost: 1.0, variant: 'danger', condition: (ctx) => ctx.game.player.stats.sanity < 20, nextSceneId: 'vote_result_insane' }
+      { id: 'vote_abstain', label: '绕开表决程序', timeCost: 1.0, variant: 'accent', condition: (ctx) => ctx.game.player.stats.intelligence >= (ctx.game.flags.day15_formula_known ? 32 : 40), nextSceneId: 'vote_result_abstain' },
+      { id: 'vote_buy_time', label: '悄悄递过去一点东西', timeCost: 1.0, variant: 'accent', condition: (ctx) => ctx.game.game.money >= 20 && ctx.game.inventory.some((i: any) => i.id === 'ration'), nextSceneId: 'vote_result_bribe' },
+      { id: 'hallucination_self', label: '把票投向自己', timeCost: 1.0, variant: 'danger', condition: (ctx) => ctx.game.player.stats.sanity < 20, nextSceneId: 'vote_result_insane' }
     ]
   },
   'vote_result_marcus': {
@@ -61,6 +68,22 @@ export const day15Plots: Record<string, PlotScene> = {
     onEnter: (ctx) => {
       ctx.game.player.stats.intelligence += 2;
       ctx.game.addLog('你感到有几道目光在暗中观察你。', 'info');
+    }
+  },
+  'vote_result_bribe': {
+    id: 'vote_result_bribe',
+    locationId: 'hall_main',
+    type: 'story',
+    text: '你悄悄把一份口粮和一笔积分递给了负责记录的人。对方没有多看你，只是把你的编号往后挪了一行。你没有赢，只是暂时不那么显眼了。',
+    actions: [
+      { id: 'continue', label: '先活过这轮再说', timeCost: 0.5, variant: 'default', nextSceneId: 'explore_hall_main' }
+    ],
+    onEnter: (ctx) => {
+      const rationIndex = ctx.game.inventory.findIndex((i: any) => i.id === 'ration');
+      if (rationIndex >= 0) ctx.game.inventory.splice(rationIndex, 1);
+      ctx.game.game.money -= 20;
+      ctx.game.player.stats.sanity -= 4;
+      ctx.game.addLog('对方把那份口粮收走时，连眼皮都没抬一下。你忽然觉得这一幕像是早就发生过无数次。', 'warning');
     }
   },
   'vote_result_insane': {

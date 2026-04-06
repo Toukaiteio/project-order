@@ -60,6 +60,23 @@
                   </span>
                 </div>
 
+                <div class="sp-vital-card hunger">
+                  <UtensilsCrossed :size="13" class="svc-ico" />
+                  <div class="svc-content">
+                    <span class="svc-label">饱腹度</span>
+                    <div class="svc-bar-wrap">
+                      <div class="svc-bar-track">
+                        <div class="svc-fill fill-hunger" :style="{ width: hungerPct + '%' }">
+                          <span class="svc-shine"></span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <span class="svc-val">
+                    {{ Math.round(game.hunger) }}<em>/100</em>
+                  </span>
+                </div>
+
               </div>
             </div>
 
@@ -140,6 +157,12 @@
                     {{ game.isRestDay ? '休息日' : '游戏日' }}
                   </span>
                 </div>
+                <div class="sp-info-cell">
+                  <span class="sic-label">下次审查</span>
+                  <span class="sic-val c-deadline">
+                    {{ game.nextDeadlineDay ? `第 ${game.nextDeadlineDay} 天` : '无' }}
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -152,7 +175,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Heart, Brain, Shield, BookOpen, Zap, DollarSign, User, X } from 'lucide-vue-next'
+import { Heart, Brain, Shield, BookOpen, Zap, DollarSign, User, X, UtensilsCrossed } from 'lucide-vue-next'
 import type { PlayerStats, GameState } from '../stores/game'
 import type { NPC } from '../stores/npcs'
 
@@ -169,6 +192,7 @@ const emit = defineEmits<{
 
 const hpPct  = computed(() => (props.player.stats.hp      / props.player.stats.maxHp)     * 100)
 const sanPct = computed(() => (props.player.stats.sanity  / props.player.stats.maxSanity) * 100)
+const hungerPct = computed(() => props.game.hunger)
 
 const formattedTime = computed(() => {
   const h = Math.floor(props.game.time).toString().padStart(2, '0')
@@ -318,6 +342,7 @@ const statsConfig = [
 .svc-ico { flex-shrink: 0; }
 .hp .svc-ico  { color: var(--accent-red);   }
 .san .svc-ico { color: var(--accent-bright); }
+.hunger .svc-ico { color: var(--accent-amber); }
 
 .svc-content {
   flex: 1;
@@ -349,6 +374,7 @@ const statsConfig = [
 
 .fill-hp  { background-color: var(--accent-red);    }
 .fill-san { background-color: var(--accent-primary); }
+.fill-hunger { background-color: var(--accent-amber); }
 
 .svc-shine {
   position: absolute;
@@ -517,6 +543,7 @@ const statsConfig = [
 
 .c-rest { color: var(--accent-green); }
 .c-game { color: var(--accent-red);   }
+.c-deadline { color: var(--accent-amber); }
 
 /* ── Transitions ────────────────────────────────── */
 .sidebar-overlay-enter-active,
