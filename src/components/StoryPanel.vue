@@ -46,7 +46,7 @@
             <div v-if="entry.resolvedId" class="la-resolved">
               <span class="lar-arrow">›</span>
               <span class="lar-label">{{ entry.resolvedLabel }}</span>
-              <span class="lar-cost">
+              <span v-if="(entry.choices.find(c => c.id === entry.resolvedId)?.timeCost ?? 0) > 0" class="lar-cost">
                 {{ formatDuration(entry.choices.find((choice) => choice.id === entry.resolvedId)?.timeCost || 0) }}
               </span>
             </div>
@@ -59,35 +59,20 @@
               </div>
 
               <div class="ia-grid">
-                <!-- 正常剧情行动 -->
-                <template v-if="!combat.active">
-                  <button
-                    v-for="choice in entry.choices"
-                    :key="choice.id"
-                    :class="['ia-btn', `ia-${choice.variant}`]"
-                    @click="emit('executeAction', entry, choice)"
-                  >
-                    <div class="ia-ico">
-                      <component :is="resolveActionIcon(choice.id)" :size="15" />
-                    </div>
-                    <div class="ia-text">
-                      <span class="ia-label">{{ choice.label }}</span>
-                      <span class="ia-cost">{{ formatDuration(choice.timeCost) }}</span>
-                    </div>
-                  </button>
-                </template>
-
-                <!-- 战斗专属行动 -->
-                <template v-else>
-                  <button class="ia-btn ia-danger" @click="emit('combatAction', 'atk')">
-                    <div class="ia-ico"><Swords :size="15" /></div>
-                    <div class="ia-text"><span class="ia-label">攻击</span></div>
-                  </button>
-                  <button class="ia-btn ia-accent" @click="emit('combatAction', 'def')">
-                    <div class="ia-ico"><Shield :size="15" /></div>
-                    <div class="ia-text"><span class="ia-label">防御</span></div>
-                  </button>
-                </template>
+                <button
+                  v-for="choice in entry.choices"
+                  :key="choice.id"
+                  :class="['ia-btn', `ia-${choice.variant}`]"
+                  @click="emit('executeAction', entry, choice)"
+                >
+                  <div class="ia-ico">
+                    <component :is="resolveActionIcon(choice.id)" :size="15" />
+                  </div>
+                  <div class="ia-text">
+                    <span class="ia-label">{{ choice.label }}</span>
+                    <span v-if="choice.timeCost > 0" class="ia-cost">{{ formatDuration(choice.timeCost) }}</span>
+                  </div>
+                </button>
               </div>
             </template>
           </div>
@@ -99,7 +84,7 @@
 
 <script setup lang="ts">
 import { nextTick, onMounted, ref, watch, type Component } from 'vue'
-import { MapPin, Swords, Shield } from 'lucide-vue-next'
+import { MapPin } from 'lucide-vue-next'
 import MapCanvas from './MapCanvas.vue'
 import type { ActionChoice, ActionsEntry, LogEntry, MapNode, CombatState } from '../stores/game'
 import { formatLogTime, resolveActionIcon, formatDuration } from '../constants/gameUi'
@@ -117,7 +102,6 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   executeAction: [entry: ActionsEntry, choice: ActionChoice]
-  combatAction: [type: 'atk' | 'def']
 }>()
 
 const logEl = ref<HTMLElement | null>(null)

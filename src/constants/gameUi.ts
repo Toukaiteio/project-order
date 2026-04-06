@@ -12,6 +12,7 @@ import {
   BookOpen,
   Users,
   Shield,
+  Swords,
   Plus,
   Image,
   Target,
@@ -49,9 +50,15 @@ const ACTION_ICONS: Record<string, Component> = {
   pick: Plus,
   buy: Package,
   attack: Shield,
+  // 战斗行动图标（匹配 _combat_atk / _combat_def）
+  '_combat_atk': Swords,
+  '_combat_def': Shield,
 }
 
 export const resolveActionIcon = (actionId: string): Component => {
+  // 精确匹配优先（用于 _combat_atk / _combat_def 等特殊 ID）
+  if (ACTION_ICONS[actionId]) return ACTION_ICONS[actionId]
+  // 模糊匹配
   for (const [key, icon] of Object.entries(ACTION_ICONS)) {
     if (actionId.toLowerCase().includes(key)) return icon
   }

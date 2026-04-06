@@ -31,7 +31,6 @@
           :weather-name="weatherName"
           :combat="combat"
           @execute-action="executeAction"
-          @combat-action="handleCombatAction"
         />
 
         <InventoryPanel
@@ -78,7 +77,6 @@ const {
   npcStore,
   executeAction,
   handleMenuAction,
-  handleCombatAction,
   formattedTime,
   game,
   combat,

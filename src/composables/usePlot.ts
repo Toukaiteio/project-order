@@ -44,7 +44,7 @@ const questioningPlots: Record<string, PlotScene> = {
         nextSceneId: 'explore_mess_hall'
       },
       { id: 'back_to_explore', label: '放弃询问', timeCost: 0.1, variant: 'default',
-        nextSceneId: (ctx) => `explore_${ctx.game.game.location}` as any
+        nextSceneId: (ctx) => `explore_${ctx.game.game.location}`
       }
     ]
   }
@@ -80,6 +80,10 @@ export function usePlot() {
   const npcStore = useNPCStore();
   const scheduleStore = useScheduleStore();
   const currentSceneId = ref('awake');
+  // 记录上一个场景，用于空行动保护机制
+  const previousSceneId = ref('');
+  // 存储当前场景所有有效行动（含动态注入），供 handleAction 查找
+  const currentValidActions = ref<PlotAction[]>([]);
 
   const context: PlotEffectContext = {
     game: gameStore,
@@ -92,7 +96,7 @@ export function usePlot() {
   watch(() => gameStore.flags.pendingPlotId, (newPlotId) => {
     if (newPlotId) {
       triggerScene(newPlotId as string);
-      gameStore.flags.pendingPlotId = ''; 
+      gameStore.flags.pendingPlotId = '';
     }
   });
 
@@ -102,6 +106,7 @@ export function usePlot() {
     const scene = ALL_PLOTS[sceneId];
     if (!scene) return;
 
+    previousSceneId.value = currentSceneId.value;
     currentSceneId.value = sceneId;
 
     // 添加叙事文本
@@ -112,9 +117,9 @@ export function usePlot() {
     if (scene.onEnter) scene.onEnter(context);
 
     // 更新可用行动
-    const validActions = [...scene.actions.filter(a => !a.condition || a.condition(context))];
-    
-    // 注入原地休息逻辑 -> 现在统一指向 rest_menu
+    const validActions: PlotAction[] = [...scene.actions.filter(a => !a.condition || a.condition(context))];
+
+    // 注入原地休息逻辑 -> 统一指向 rest_menu
     if (scene.allowFieldRest) {
       validActions.push({
         id: 'field_rest_entry', label: '原地休息 (风险)', timeCost: 0.1, variant: 'danger',
@@ -125,10 +130,10 @@ export function usePlot() {
     // --- 动态 NPC 交互注入 ---
     if (sceneId !== 'npc_menu_general' && sceneId !== 'rest_menu') {
       const currentLoc = gameStore.game.location;
-      const npcsHere = Object.values(npcStore.npcs).filter(n => 
+      const npcsHere = Object.values(npcStore.npcs).filter(n =>
         n.location === currentLoc && n.state === 'Alive' && n.met === true
       );
-      
+
       npcsHere.forEach(npc => {
         if (!validActions.some(a => a.id === `interact_${npc.id}`)) {
           validActions.push({
@@ -145,17 +150,35 @@ export function usePlot() {
       });
     }
 
+    // --- 安全保护：若当前无任何行动，注入撤回上一步 ---
+    if (validActions.length === 0 && previousSceneId.value && previousSceneId.value !== sceneId) {
+      validActions.push({
+        id: '_undo_last_action',
+        label: '← 撤回上一步 [测试]',
+        timeCost: 0,
+        variant: 'default',
+      });
+    }
+
+    // 缓存完整行动列表（含注入项），handleAction 从此查找
+    currentValidActions.value = validActions;
     gameStore.addActions(validActions);
   };
 
   const handleAction = (choiceId: string) => {
-    if (!currentScene.value) return;
-    const action = currentScene.value.actions.find(a => a.id === choiceId);
+    // 撤回保护：回到上一个场景
+    if (choiceId === '_undo_last_action') {
+      if (previousSceneId.value) triggerScene(previousSceneId.value);
+      return;
+    }
+
+    // 在完整行动列表（含注入项）中查找，修复动态注入行动无法执行的问题
+    const action = currentValidActions.value.find(a => a.id === choiceId);
     if (!action) return;
     if (action.effect) action.effect(context);
     if (action.nextSceneId) {
       const targetId = typeof action.nextSceneId === 'function' ? action.nextSceneId(context) : action.nextSceneId;
-      triggerScene(targetId as string);
+      triggerScene(targetId);
     }
   };
 

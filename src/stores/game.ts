@@ -161,7 +161,14 @@ export const useGameStore = defineStore('game', {
 
     addLog(text: string, type: NarrativeEntry['type'] = 'info') {
       const id = `n-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
-      this.logs.push({ id, time: Date.now(), text, type });
+      const entry = { id, time: Date.now(), text, type };
+      // 若末尾是未选择的行动条目，将叙事插入其前，避免日志出现在按钮下方
+      const last = this.logs[this.logs.length - 1];
+      if (last && last.type === 'actions' && !last.resolvedId) {
+        this.logs.splice(this.logs.length - 1, 0, entry);
+      } else {
+        this.logs.push(entry);
+      }
       if (this.logs.length > 300) this.logs.shift();
     },
 
@@ -250,6 +257,14 @@ export const useGameStore = defineStore('game', {
       this.combat.enemyAtk = atk;
       this.combat.log = [`战斗开始：${enemyName} 出现了！`];
       this.addLog(`进入战斗状态：对手是 ${enemyName}`, 'danger');
+      this.addCombatActions();
+    },
+
+    addCombatActions() {
+      this.addActions([
+        { id: '_combat_atk', label: '攻击', timeCost: 0.5, variant: 'danger' },
+        { id: '_combat_def', label: '防御', timeCost: 0.25, variant: 'accent' },
+      ]);
     },
 
     processCombatTurn(actionId: 'atk' | 'def' | 'skill') {
@@ -286,7 +301,9 @@ export const useGameStore = defineStore('game', {
       if (actionId === 'def') enemyDmg = Math.floor(enemyDmg / 2);
       
       this.player.stats.hp -= enemyDmg;
-      this.addLog(`${this.combat.enemyName} 反击，对你造成了 ${enemyDmg} 点伤害。`, 'danger');
+      const sanityHit = Math.max(1, Math.ceil(enemyDmg * 0.35));
+      this.player.stats.sanity = Math.max(0, this.player.stats.sanity - sanityHit);
+      this.addLog(`${this.combat.enemyName} 反击，对你造成了 ${enemyDmg} 点伤害。（SAN -${sanityHit}）`, 'danger');
 
       // 检查失败
       if (this.player.stats.hp <= 0) {

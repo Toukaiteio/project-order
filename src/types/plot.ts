@@ -10,9 +10,9 @@ export interface PlotEffectContext {
 export interface PlotAction extends ActionChoice {
   condition?: (context: PlotEffectContext) => boolean;
   effect?: (context: PlotEffectContext) => void;
-  nextSceneId?: string;
+  nextSceneId?: string | ((context: PlotEffectContext) => string);
   // 留白：允许在行动后插入一段随机的 NPC 独白或环境描写
-  postNarrative?: string | ((context: PlotEffectContext) => string); 
+  postNarrative?: string | ((context: PlotEffectContext) => string);
 }
 
 export interface PlotScene {

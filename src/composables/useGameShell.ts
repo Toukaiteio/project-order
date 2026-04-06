@@ -49,6 +49,21 @@ export function useGameShell() {
     gameStore.resolveAction(entry.id, choice.id, choice.label)
     gameStore.consumeTime(choice.timeCost)
 
+    // --- 战斗行动（统一走 action 系统，不再用独立 emit） ---
+    if (choice.id === '_combat_atk' || choice.id === '_combat_def') {
+      const type = choice.id === '_combat_atk' ? 'atk' : 'def'
+      const result = gameStore.processCombatTurn(type)
+      if (result === 'win') {
+        triggerScene('combat_victory')
+      } else if (result === 'lose') {
+        triggerScene('combat_defeat')
+      } else {
+        gameStore.addCombatActions()
+      }
+      gameStore.saveGame()
+      return
+    }
+
     if (choice.id.startsWith('move_')) {
       const targetId = choice.id.replace('move_', '')
       gameStore.moveTo(targetId)
@@ -110,11 +125,6 @@ export function useGameShell() {
     gameStore.saveGame()
   }
 
-  const handleCombatAction = (type: 'atk' | 'def') => {
-    gameStore.processCombatTurn(type)
-    gameStore.saveGame()
-  }
-
   const handleMenuAction = (type: 'new' | 'continue' | 'settings') => {
     if (type === 'new') mode.value = 'creation'
     else if (type === 'continue') {
@@ -136,7 +146,6 @@ export function useGameShell() {
     combat,
     handleNavClick,
     handleMenuAction,
-    handleCombatAction,
     inventory,
     locationName,
     logs,

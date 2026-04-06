@@ -55,13 +55,14 @@ export const npcInteractionPlots: Record<string, PlotScene> = {
         effect: (ctx) => {
           const npcId = ctx.game.flags.interacting_npc_id;
           const npc = ctx.npcs.npcs[npcId];
-          ctx.game.addLog(`你对 ${npc.name} 表现出了敌意。`, 'danger');
+          ctx.game.addLog(`你突然对 ${npc.name} 发动了攻击。周围的人纷纷后退，冷漠地注视着这一切。`, 'danger');
+          ctx.npcs.interact(npcId, -30, -40);
           ctx.game.enterCombat(npc.name, 80, 10);
         },
-        nextSceneId: 'explore_hall_main'
+        // 无 nextSceneId：战斗行动由 enterCombat 内部注入，接管后续流程
       },
       { id: 'npc_leave', label: '离开', timeCost: 0.1, variant: 'default',
-        nextSceneId: (ctx) => `explore_${ctx.game.game.location}` as any
+        nextSceneId: (ctx) => `explore_${ctx.game.game.location}`
       }
     ]
   }
