@@ -1,4 +1,4 @@
-import type { PlotScene } from '../../types/plot';
+import type { PlotScene } from '../../../types/plot';
 
 export const day75Plots: Record<string, PlotScene> = {
   'the_last_supper_start': {

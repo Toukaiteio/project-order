@@ -1,4 +1,4 @@
-import type { PlotScene } from '../../types/plot';
+import type { PlotScene } from '../../../types/plot';
 
 export const day30Plots: Record<string, PlotScene> = {
   'game_02_death_race': {

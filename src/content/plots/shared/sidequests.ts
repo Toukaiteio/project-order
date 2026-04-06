@@ -1,4 +1,4 @@
-import type { PlotScene } from '../../types/plot';
+import type { PlotScene } from '../../../types/plot';
 
 export const sideQuests: Record<string, PlotScene> = {
   // --- Satoshi K. 支线: 修复终端 ---
@@ -94,6 +94,35 @@ export const sideQuests: Record<string, PlotScene> = {
         },
         nextSceneId: 'explore_garbage_chute'
       }
+    ]
+  },
+
+  // --- Sasha 项链返回场景 ---
+  'quest_sasha_locket_return': {
+    id: 'quest_sasha_locket_return',
+    locationId: 'mess_hall',
+    type: 'story',
+    text: (ctx) => {
+      const npc = ctx.npcs.npcs['sasha'];
+      if (!npc || npc.state !== 'Alive') {
+        return '你来到食堂想找 Sasha，但她不在了。角落的座位是空的，永远是空的。';
+      }
+      return '你在食堂的角落找到了 Sasha。她正在用那种机械化的动作拨弄她的口粮，眼神空洞而疲惫。';
+    },
+    actions: [
+      {
+        id: 'return_locket_to_sasha', label: '把吊坠递给她', timeCost: 0.5, variant: 'accent',
+        condition: (ctx) => ctx.game.inventory.some((i: any) => i.id === 'sasha_locket'),
+        effect: (ctx) => {
+          const idx = ctx.game.inventory.findIndex((i: any) => i.id === 'sasha_locket');
+          ctx.game.inventory.splice(idx, 1);
+          ctx.game.flags.sasha_locket_returned = true;
+          ctx.npcs.interact('sasha', 20, 15);
+          ctx.game.addLog('Sasha 的眼神瞬间恢复了焦点。她接过吊坠，手指颤抖着打开它。看到那张全家福的瞬间，她的眼泪决堤了。\n"谢谢你……"她只能重复这个词，像在重复呼吸。', 'story');
+        },
+        nextSceneId: 'explore_mess_hall'
+      },
+      { id: 'keep_locket', label: '放弃', timeCost: 0.1, variant: 'default', nextSceneId: 'explore_mess_hall' }
     ]
   },
 

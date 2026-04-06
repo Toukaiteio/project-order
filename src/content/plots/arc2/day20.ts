@@ -1,4 +1,4 @@
-import type { PlotScene } from '../../types/plot';
+import type { PlotScene } from '../../../types/plot';
 
 export const day20Plots: Record<string, PlotScene> = {
   'aftermath_reaction': {
@@ -50,6 +50,7 @@ export const day20Plots: Record<string, PlotScene> = {
         timeCost: 1.5,
         variant: 'default',
         effect: (ctx) => {
+          ctx.game.flags.elena_allied = true;
           ctx.npcs.interact('elena', 20, 10);
           ctx.game.addLog('Elena 对你分析出的规律表现出了兴趣。', 'info');
         },

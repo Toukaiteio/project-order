@@ -1,4 +1,4 @@
-import type { PlotScene } from '../../types/plot';
+import type { PlotScene } from '../../../types/plot';
 
 export const npcInteractionPlots: Record<string, PlotScene> = {
   'npc_menu_general': {

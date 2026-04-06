@@ -1,4 +1,4 @@
-import type { PlotScene } from '../../types/plot';
+import type { PlotScene } from '../../../types/plot';
 
 export const locationExplorationPlots: Record<string, PlotScene> = {
   'explore_cell_01': {

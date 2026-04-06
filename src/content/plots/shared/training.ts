@@ -1,4 +1,4 @@
-import type { PlotScene } from '../../types/plot';
+import type { PlotScene } from '../../../types/plot';
 
 export const trainingPlots: Record<string, PlotScene> = {
   // --- 力量锻炼小游戏 ---

@@ -1,4 +1,4 @@
-import type { PlotScene } from '../../types/plot';
+import type { PlotScene } from '../../../types/plot';
 
 export const day60Plots: Record<string, PlotScene> = {
   'the_great_purge_start': {

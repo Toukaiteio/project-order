@@ -3,26 +3,26 @@ import { useGameStore } from '../stores/game';
 import { useDialogStore } from '../stores/dialog';
 import { useNPCStore } from '../stores/npcs';
 import { useScheduleStore } from '../stores/schedule';
-import { day01Plots } from '../content/plots/day01';
-import { day02Plots } from '../content/plots/day02';
-import { day03Plots } from '../content/plots/day03';
-import { day05Plots } from '../content/plots/day05';
-import { day11Plots } from '../content/plots/day11';
-import { day15Plots } from '../content/plots/day15';
-import { day20Plots } from '../content/plots/day20';
-import { day30Plots } from '../content/plots/day30';
-import { day45Plots } from '../content/plots/day45';
-import { day60Plots } from '../content/plots/day60';
-import { day75Plots } from '../content/plots/day75';
-import { day90Plots } from '../content/plots/day90';
-import { companionPlots } from '../content/plots/companion';
-import { trainingPlots } from '../content/plots/training';
-import { npcInteractionPlots } from '../content/plots/npc_interaction';
-import { systemPlots } from '../content/plots/system_actions';
-import { sideQuests } from '../content/plots/sidequests';
-import { encounterPlots } from '../content/plots/encounters';
-import { locationExplorationPlots } from '../content/plots/locations';
-import type { PlotScene, PlotEffectContext } from '../types/plot';
+import { day01Plots } from '../content/plots/arc1/day01';
+import { day02Plots } from '../content/plots/arc1/day02';
+import { day03Plots } from '../content/plots/arc1/day03';
+import { day05Plots } from '../content/plots/arc1/day05';
+import { day11Plots } from '../content/plots/arc1/day11';
+import { day15Plots } from '../content/plots/arc1/day15';
+import { day20Plots } from '../content/plots/arc2/day20';
+import { day30Plots } from '../content/plots/arc2/day30';
+import { day45Plots } from '../content/plots/arc3/day45';
+import { day60Plots } from '../content/plots/arc4/day60';
+import { day75Plots } from '../content/plots/arc5/day75';
+import { day90Plots } from '../content/plots/arc6/day90';
+import { companionPlots } from '../content/plots/shared/companion';
+import { trainingPlots } from '../content/plots/shared/training';
+import { npcInteractionPlots } from '../content/plots/shared/npc_interaction';
+import { systemPlots } from '../content/plots/shared/system_actions';
+import { sideQuests } from '../content/plots/shared/sidequests';
+import { encounterPlots } from '../content/plots/shared/encounters';
+import { locationExplorationPlots } from '../content/plots/shared/locations';
+import type { PlotScene, PlotAction, PlotEffectContext } from '../types/plot';
 
 const questioningPlots: Record<string, PlotScene> = {
   'ask_about_facility': {
@@ -105,6 +105,12 @@ export function usePlot() {
   const triggerScene = (sceneId: string) => {
     const scene = ALL_PLOTS[sceneId];
     if (!scene) return;
+
+    // 清除末尾的未 resolve action entry（防止主线事件触发时出现多个菜单）
+    const lastEntry = gameStore.logs[gameStore.logs.length - 1];
+    if (lastEntry && lastEntry.type === 'actions' && !lastEntry.resolvedId) {
+      gameStore.logs.pop();
+    }
 
     previousSceneId.value = currentSceneId.value;
     currentSceneId.value = sceneId;

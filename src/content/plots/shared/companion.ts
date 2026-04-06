@@ -1,4 +1,4 @@
-import type { PlotScene } from '../../types/plot';
+import type { PlotScene } from '../../../types/plot';
 
 export const companionPlots: Record<string, PlotScene> = {
   'companion_intro': {

@@ -1,4 +1,4 @@
-import type { PlotScene } from '../../types/plot';
+import type { PlotScene } from '../../../types/plot';
 
 export const day15Plots: Record<string, PlotScene> = {
   'faction_split_vote': {
@@ -31,6 +31,7 @@ export const day15Plots: Record<string, PlotScene> = {
       { id: 'continue', label: '活过这一天', timeCost: 0.5, variant: 'default', nextSceneId: 'explore_hall_main' }
     ],
     onEnter: (ctx) => {
+      ctx.game.flags.voted_marcus = true;
       ctx.npcs.interact('marcus', -40, -20);
       ctx.game.addLog('Marcus 向你露出了一个冰冷的笑容。', 'warning');
     }
@@ -44,6 +45,7 @@ export const day15Plots: Record<string, PlotScene> = {
       { id: 'continue', label: '活过这一天', timeCost: 0.5, variant: 'default', nextSceneId: 'explore_hall_main' }
     ],
     onEnter: (ctx) => {
+      ctx.game.flags.voted_elena = true;
       ctx.npcs.interact('elena', -30, -10);
       ctx.game.addLog('Elena 并没有生气，只是在她的笔记本上重重地写下了你的名字。', 'info');
     }

@@ -1,4 +1,4 @@
-import type { PlotScene } from '../../types/plot';
+import type { PlotScene } from '../../../types/plot';
 
 export const encounterPlots: Record<string, PlotScene> = {
   // --- Elena V. 偶遇 ---
