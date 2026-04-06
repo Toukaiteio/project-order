@@ -37,7 +37,7 @@ const SPECIAL_SCENES = new Set([
   'ask_about_facility',
 ]);
 
-export function useScriptValidator() {
+export function useSceneValidator() {
   const { getAllSceneIds, getSceneDetails } = usePlot();
 
   const validateAll = (): ValidationResult => {
@@ -45,72 +45,57 @@ export function useScriptValidator() {
     const errors: ValidationError[] = [];
     const warnings: ValidationError[] = [];
 
-    // 获取所有定义的 scene id
     const allSceneIds = getAllSceneIds();
     const sceneIdSet = new Set(allSceneIds);
     const checkedScenes = new Set<string>();
 
-    // 步骤1：检查每个 scene 中的所有 nextSceneId 是否存在
     for (const sceneId of allSceneIds) {
       const scene = getSceneDetails(sceneId) as PlotScene | undefined;
       if (!scene) continue;
 
       checkedScenes.add(sceneId);
 
-      // 检查 scene 本身的逻辑出口
-      if (scene.actions && scene.actions.length > 0) {
-        for (const action of scene.actions) {
-          if (action.nextSceneId) {
-            const nextSceneId = typeof action.nextSceneId === 'function'
-              ? null  // 函数式的 nextSceneId，无法静态检查
-              : action.nextSceneId;
+      for (const action of scene.actions ?? []) {
+        if (!action.nextSceneId) continue;
 
-            if (nextSceneId && !sceneIdSet.has(nextSceneId)) {
-              errors.push({
-                type: 'missing_scene',
-                sceneId,
-                actionId: action.id,
-                details: `Action "${action.id}" 指向不存在的 scene "${nextSceneId}"`,
-              });
-            }
-          }
+        if (typeof action.nextSceneId === 'function') {
+          warnings.push({
+            type: 'dynamic_transition',
+            sceneId,
+            actionId: action.id,
+            details: `Action "${action.id}" uses a dynamic nextSceneId and cannot be fully validated statically.`,
+          });
+          continue;
+        }
+
+        if (!sceneIdSet.has(action.nextSceneId)) {
+          errors.push({
+            type: 'missing_scene',
+            sceneId,
+            actionId: action.id,
+            details: `Action "${action.id}" points to missing scene "${action.nextSceneId}".`,
+          });
         }
       }
     }
 
-    // 步骤2：检查场景是否有死路（没有任何出口）
     for (const sceneId of allSceneIds) {
       const scene = getSceneDetails(sceneId) as PlotScene | undefined;
       if (!scene) continue;
 
-      // 跳过已知的终局 scene 或特殊 scene
       if (TERMINAL_SCENES.has(sceneId) || SPECIAL_SCENES.has(sceneId)) {
         continue;
       }
 
-      // 检查是否有有效的出口
-      let hasValidExit = false;
-
-      if (scene.actions && scene.actions.length > 0) {
-        for (const action of scene.actions) {
-          // 如果有 nextSceneId（无论是字符串还是函数），就认为有出口
-          if (action.nextSceneId) {
-            hasValidExit = true;
-            break;
-          }
-        }
-      }
-
+      const hasValidExit = (scene.actions ?? []).some(action => !!action.nextSceneId);
       if (!hasValidExit) {
         warnings.push({
           type: 'dead_path',
           sceneId,
-          details: `Scene "${sceneId}" 没有任何有效的出口 action`,
+          details: `Scene "${sceneId}" has no outgoing action.`,
         });
       }
     }
-
-    const duration = performance.now() - startTime;
 
     return {
       isValid: errors.length === 0,
@@ -118,7 +103,7 @@ export function useScriptValidator() {
       warnings,
       totalScenes: allSceneIds.length,
       checkedScenes: checkedScenes.size,
-      duration: Math.round(duration),
+      duration: Math.round(performance.now() - startTime),
     };
   };
 

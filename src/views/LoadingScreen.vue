@@ -40,7 +40,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
-import { useScriptValidator, type ValidationResult } from '../composables/useScriptValidator';
+import { useSceneValidator, type ValidationResult } from '../composables/useSceneValidator';
 
 const emit = defineEmits<{
   ready: [];
@@ -73,7 +73,7 @@ onMounted(async () => {
 
   // 执行自检
   try {
-    const { validateAll } = useScriptValidator();
+    const { validateAll } = useSceneValidator();
 
     // 模拟逐步检查
     for (let i = 0; i < steps.length; i++) {

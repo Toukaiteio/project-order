@@ -1,6 +1,27 @@
 import type { PlotScene } from '../../../types/plot';
 
 export const companionPlots: Record<string, PlotScene> = {
+  'companion_intro': {
+    id: 'companion_intro',
+    locationId: 'cell_01',
+    type: 'story',
+    text: '灰把你带回了牢房门口。他没有立刻开口，只是先看了一眼走廊尽头的灯，然后侧身让你进去。',
+    onEnter: (ctx) => {
+      ctx.game.flags.companion_met = true;
+      ctx.game.flags.grey_met = true;
+      ctx.npcs.npcs['grey'].met = true;
+      ctx.npcs.npcs['grey'].location = 'cell_01';
+    },
+    actions: [
+      {
+        id: 'companion_intro_continue',
+        label: '跟着他进去',
+        timeCost: 0.25,
+        variant: 'accent',
+        nextSceneId: 'grey_first_approach'
+      }
+    ]
+  },
   // --- Grey 的初次相遇（观察阶段） ---
   'grey_first_notice': {
     id: 'grey_first_notice',

@@ -251,7 +251,9 @@ export function usePlot() {
   // 监听待处理剧情，实现跨天或事件自动触发
   watch(() => gameStore.flags.pendingPlotId, (newPlotId) => {
     if (newPlotId) {
-      triggerScene(newPlotId as string);
+      if (!triggerScene(newPlotId as string)) {
+        triggerScene(`explore_${gameStore.game.location}`);
+      }
       gameStore.flags.pendingPlotId = '';
     }
   });
@@ -260,7 +262,10 @@ export function usePlot() {
 
   const triggerScene = (sceneId: string) => {
     const scene = ALL_PLOTS[sceneId];
-    if (!scene) return;
+    if (!scene) {
+      console.error(`[plot] Missing scene: ${sceneId}`);
+      return false;
+    }
 
     // 清除末尾的未 resolve action entry（防止主线事件触发时出现多个菜单）
     const lastEntry = gameStore.logs[gameStore.logs.length - 1];
@@ -331,6 +336,7 @@ export function usePlot() {
       label: typeof a.label === 'function' ? a.label(context) : a.label
     })) as any;
     gameStore.addActions(actionChoices);
+    return true;
   };
 
   const handleAction = (choiceId: string) => {
@@ -346,7 +352,11 @@ export function usePlot() {
     if (action.effect) action.effect(context);
     if (action.nextSceneId) {
       const targetId = typeof action.nextSceneId === 'function' ? action.nextSceneId(context) : action.nextSceneId;
-      triggerScene(targetId);
+      if (!triggerScene(targetId)) {
+        if (!triggerScene(`explore_${gameStore.game.location}`) && previousSceneId.value) {
+          triggerScene(previousSceneId.value);
+        }
+      }
     }
   };
 
