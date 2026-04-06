@@ -7,7 +7,8 @@ export interface PlotEffectContext {
   schedule: any; // 新增 日程存储
 }
 
-export interface PlotAction extends ActionChoice {
+export interface PlotAction extends Omit<ActionChoice, 'label'> {
+  label: string | ((context: PlotEffectContext) => string);
   condition?: (context: PlotEffectContext) => boolean;
   effect?: (context: PlotEffectContext) => void;
   nextSceneId?: string | ((context: PlotEffectContext) => string);

@@ -12,6 +12,12 @@ export const npcInteractionPlots: Record<string, PlotScene> = {
       if (!npc) return '目标已消失。';
       return `你正面对着 ${npc.name} (${npc.roleLabel})。其眼神中透露出 ${npc.trust > 50 ? '一丝信任' : '深深的戒备'}。你想做什么？`;
     },
+    onEnter: (ctx) => {
+      if (!ctx.game.flags.tutorial_npc_done) {
+        ctx.game.flags.tutorial_npc_done = true;
+        ctx.game.addLog('【提示：NPC 系统】每个 NPC 都有好感度和信任度两个属性。交谈和协作会增加这些值，冲突会降低。不同的好感度级别会解锁不同的对话选项。', 'info');
+      }
+    },
     actions: [
       { id: 'npc_talk', label: '进行交谈', timeCost: 0.5, variant: 'default',
         effect: (ctx) => {

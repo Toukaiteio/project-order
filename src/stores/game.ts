@@ -226,6 +226,15 @@ export const useGameStore = defineStore('game', {
         this.game.weather = weathers[Math.floor(Math.random() * weathers.length)];
       }
       this.addLog(`新的一天开始了。今天是第 ${this.game.day} 天。`, 'info');
+
+      // 处理可选偶遇钩子：如果有mainPlotId则优先触发，否则随机触发可选偶遇
+      if (config.optionalHooks && config.optionalHooks.length > 0 && !config.mainPlotId) {
+        if (Math.random() < 0.6) {
+          const hook = config.optionalHooks[Math.floor(Math.random() * config.optionalHooks.length)];
+          this.flags.pendingPlotId = hook;
+        }
+      }
+
       if (config.mainPlotId) this.flags.pendingPlotId = config.mainPlotId;
       this.saveGame();
     },

@@ -168,7 +168,13 @@ export function usePlot() {
 
     // 缓存完整行动列表（含注入项），handleAction 从此查找
     currentValidActions.value = validActions;
-    gameStore.addActions(validActions);
+
+    // 将动态标签解析为字符串后传给 addActions
+    const actionChoices = validActions.map(a => ({
+      ...a,
+      label: typeof a.label === 'function' ? a.label(context) : a.label
+    })) as any;
+    gameStore.addActions(actionChoices);
   };
 
   const handleAction = (choiceId: string) => {

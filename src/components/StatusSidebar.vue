@@ -95,13 +95,6 @@
                 <span class="sr-name">设施电力</span>
                 <span class="sr-val-zap">{{ game.energy }}%</span>
               </div>
-              <div v-if="player.equippedWeapon" class="sp-res-row mt-8">
-                <Shield :size="13" class="sr-ico" style="color: var(--accent-bright)" />
-                <span class="sr-name" style="color: var(--accent-bright)">当前装备</span>
-                <span class="sr-val" style="color: var(--accent-bright); font-size: 0.75rem;">
-                  {{ getWeaponName(player.equippedWeapon) }}
-                </span>
-              </div>
             </div>
 
             <!-- NPCs -->
@@ -159,7 +152,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Heart, Brain, Shield, BookOpen, Zap, DollarSign, User, X, Users } from 'lucide-vue-next'
+import { Heart, Brain, Shield, BookOpen, Zap, DollarSign, User, X } from 'lucide-vue-next'
 import type { PlayerStats, GameState } from '../stores/game'
 import type { NPC } from '../stores/npcs'
 
@@ -193,11 +186,6 @@ const weatherName = computed(() => {
 const metNPCs = computed(() => {
   return Object.values(props.npcs).filter(n => n.met)
 })
-
-const getWeaponName = (id: string) => {
-  if (id === 'iron_pipe') return '生锈的铁管';
-  return id;
-}
 
 const statsConfig = [
   { id: 'strength' as keyof PlayerStats, label: '力量', icon: Shield },

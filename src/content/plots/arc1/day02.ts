@@ -8,6 +8,10 @@ export const day02Plots: Record<string, PlotScene> = {
     text: '刺耳的警笛声在清晨响起。沉重的脚步声停在门外，“突击检查！所有人站在床边，双手抱头！”两名全副武装的卫兵冲进房间，开始粗暴地翻找。',
     onEnter: (ctx) => {
       ctx.game.setObjective('在检查中存活');
+      if (!ctx.game.flags.tutorial_checks_done) {
+        ctx.game.flags.tutorial_checks_done = true;
+        ctx.game.addLog('【提示：属性检定】系统会根据你的属性和随机骰子结果判定行动是否成功。骰子结果（1-20）加上属性值需要达到或超过难度值。这次的难度是 10。', 'info');
+      }
     },
     actions: [
       { 
@@ -22,7 +26,7 @@ export const day02Plots: Record<string, PlotScene> = {
             ctx.game.addLog('卫兵发现了你藏匿的东西！他狠狠给了你一托。', 'danger');
             ctx.game.player.stats.hp -= 20;
             // 移除特定道具
-            ctx.game.inventory = ctx.game.inventory.filter(i => i.id !== 'crumpled_note' && i.id !== 'electronic_part');
+            ctx.game.inventory = ctx.game.inventory.filter((i: any) => i.id !== 'crumpled_note' && i.id !== 'electronic_part');
           }
         },
         nextSceneId: 'explore_cell_01'

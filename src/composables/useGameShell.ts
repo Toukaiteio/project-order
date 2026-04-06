@@ -34,7 +34,7 @@ export function useGameShell() {
 
   const formattedTime = computed(() => formatClockTime(game.value.time))
   const weatherName = computed(() => WEATHER_NAMES[game.value.weather] ?? '未知')
-  const weatherIcon = computed(() => resolveWeatherIcon(game.value.weather))
+  const weatherIcon = computed(() => resolveWeatherIcon())
   const locationName = computed(() => LOCATION_NAMES[game.value.location] ?? game.value.location)
 
   const handleNavClick = (item: (typeof NAV_ITEMS)[number]) => {
@@ -87,8 +87,68 @@ export function useGameShell() {
         triggerScene('quest_satoshi_complete'); return
       }
 
+      // --- Grey 的剧情弧线触发 ---
+      if (gameStore.flags.companion_met && gameStore.game.day >= 7 && !gameStore.flags.grey_d7_done && targetId === 'corridor_a') {
+        triggerScene('grey_day07_check'); return
+      }
+      if (gameStore.flags.grey_d7_done && gameStore.game.day >= 14 && !gameStore.flags.grey_d14_done && targetId === 'cell_01') {
+        triggerScene('grey_day14_secret'); return
+      }
+      if (gameStore.flags.grey_d14_done && gameStore.game.day >= 45 && !gameStore.flags.grey_d45_done && targetId === 'hall_main') {
+        triggerScene('grey_day45_warning'); return
+      }
+      if (gameStore.flags.grey_d45_done && gameStore.game.day >= 75 && !gameStore.flags.grey_d75_fate && targetId === 'hall_main') {
+        gameStore.flags.grey_d75_fate = true; // 防止重复触发
+        triggerScene('grey_day75_fate'); return
+      }
+
+      // --- Elena 的剧情弧线触发 ---
+      if (gameStore.flags.elena_allied && gameStore.game.day === 20 && !gameStore.flags.elena_quest_active && targetId === 'hall_main') {
+        triggerScene('elena_day20_brief'); return
+      }
+      if (gameStore.flags.elena_quest_active && !gameStore.flags.elena_quest_complete && targetId === 'hall_main' && Math.random() < 0.3) {
+        triggerScene('quest_elena_data_collect'); return
+      }
+
+      // --- 1.5. 日常事件触发（特定天数） ---
+      if (gameStore.game.day === 4 && targetId === 'cell_01' && !gameStore.flags.daily_d04_done) {
+        gameStore.flags.daily_d04_done = true;
+        triggerScene('daily_d04_isolation'); return
+      }
+      if (gameStore.game.day === 6 && targetId === 'hall_main' && !gameStore.flags.daily_d06_done) {
+        gameStore.flags.daily_d06_done = true;
+        triggerScene('daily_d06_food_queue'); return
+      }
+      if (gameStore.game.day === 7 && targetId === 'cell_01' && !gameStore.flags.daily_d07_done && Math.random() < 0.3) {
+        gameStore.flags.daily_d07_done = true;
+        triggerScene('daily_d07_nightmare'); return
+      }
+      if (gameStore.game.day === 9 && targetId === 'corridor_a' && !gameStore.flags.daily_d09_done && Math.random() < 0.4) {
+        gameStore.flags.daily_d09_done = true;
+        triggerScene('daily_d09_wall_tap'); return
+      }
+      if (gameStore.game.day === 13 && targetId === 'hall_main' && !gameStore.flags.daily_d13_done) {
+        gameStore.flags.daily_d13_done = true;
+        triggerScene('daily_d13_white_coat'); return
+      }
+
       // --- 2. 概率性剧情触发 (偶遇/幻觉/支线开启) ---
-      
+
+      // Grey 初次偶遇（未接纳前）
+      if (!gameStore.flags.companion_met && targetId === 'corridor_a' && Math.random() < 0.25) {
+        triggerScene('encounter_grey_before_met'); gameStore.saveGame(); return
+      }
+
+      // 囚犯打斗
+      if (targetId === 'corridor_a' && Math.random() < 0.2) {
+        triggerScene('encounter_prisoner_brawl'); gameStore.saveGame(); return
+      }
+
+      // Aris 秘密冷藏箱
+      if (targetId === 'med_bay' && npcStore.npcs['aris'].trust > 40 && !gameStore.flags.aris_box_opened && Math.random() < 0.2) {
+        triggerScene('encounter_aris_secret_box'); gameStore.saveGame(); return
+      }
+
       const npcsAtLocation = Object.values(npcStore.npcs).filter(
         n => n.location === targetId && n.state === 'Alive'
       )

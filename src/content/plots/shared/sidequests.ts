@@ -147,5 +147,88 @@ export const sideQuests: Record<string, PlotScene> = {
       },
       { id: 'ignore_aris', label: '我顾不上别人', timeCost: 0.25, variant: 'default', nextSceneId: 'explore_med_bay' }
     ]
+  },
+
+  // --- Elena V. 支线: 数据收集 ---
+  'elena_day20_brief': {
+    id: 'elena_day20_brief',
+    locationId: 'hall_main',
+    type: 'story',
+    text: 'Elena 将一份手写的统计表递给你。上面是每个囚犯的"贡献分"和预期淘汰时间的预测。你在表上找到了自己的名字，旁边有一个大大的问号。',
+    actions: [
+      {
+        id: 'accept_elena_brief',
+        label: '接受这份数据',
+        timeCost: 1.0,
+        variant: 'accent',
+        effect: (ctx) => {
+          ctx.game.flags.elena_quest_active = true;
+          ctx.game.inventory.push({
+            id: 'elena_prediction_table',
+            name: 'Elena 的预测表',
+            description: '囚犯们的"存活指数"。上面的名字，很多已经不存在了。',
+            icon: 'document',
+            quantity: 1,
+            category: 'document'
+          });
+          ctx.game.addLog('"问号代表不确定，"Elena 解释道，"而我喜欢消除不确定。帮我收集一些……原始数据。"', 'info');
+        },
+        nextSceneId: 'explore_hall_main'
+      },
+      { id: 'reject_elena_brief', label: '拒绝参与', timeCost: 0.5, variant: 'default', nextSceneId: 'explore_hall_main' }
+    ]
+  },
+
+  'quest_elena_data_collect': {
+    id: 'quest_elena_data_collect',
+    locationId: 'hall_main',
+    type: 'story',
+    text: 'Elena 在大厅等你。她用一种深蓝色的圆珠笔转动着，眼神锐利。"数据的质量取决于取样的多样性。我需要你从三个不同的地点收集信息。"',
+    actions: [
+      {
+        id: 'understand_elena_task',
+        label: '接受任务',
+        timeCost: 0.5,
+        variant: 'accent',
+        effect: (ctx) => {
+          ctx.game.flags.elena_data_collect_active = true;
+          ctx.game.setObjective('为 Elena 收集数据：医疗站记录 + 走廊秘密 + 大厅观察');
+          ctx.game.addLog('Elena 列出了三个位置：医疗站的手术记录、走廊里的囚犯对话、大厅的守卫动向。', 'info');
+          ctx.game.addLog('"完成后，我给你一份真正重要的东西——实验的终止协议草案。"', 'danger');
+        },
+        nextSceneId: 'explore_hall_main'
+      },
+      { id: 'decline_elena_task', label: '这太危险了', timeCost: 0.1, variant: 'default', nextSceneId: 'explore_hall_main' }
+    ]
+  },
+
+  'quest_elena_data_complete': {
+    id: 'quest_elena_data_complete',
+    locationId: 'hall_main',
+    type: 'story',
+    text: 'Elena 接受了你的所有汇报。她那张冰冷的脸上，第一次出现了接近于满意的表情。她递给你一份加密的文件。',
+    actions: [
+      {
+        id: 'receive_termination_protocol',
+        label: '拿起那份文件',
+        timeCost: 1.0,
+        variant: 'accent',
+        effect: (ctx) => {
+          ctx.game.flags.elena_quest_complete = true;
+          ctx.game.inventory.push({
+            id: 'termination_protocol_draft',
+            name: '终止协议草案',
+            description: '这是"秩序之眼"实验的官方终止文件。如果这份文件泄露……后果不堪设想。',
+            icon: 'document',
+            quantity: 1,
+            category: 'document'
+          });
+          ctx.npcs.interact('elena', 25, 30);
+          ctx.game.addLog('"这意味着，实验从一开始就被设计为失败的，"Elena 轻声说，"最高层知道会有死亡。他们在等一个阈值——看我们能支撑多久。"', 'danger');
+          ctx.game.addLog('"现在，你和我都成为了这个秘密的共谋者。祝你好运。"', 'warning');
+        },
+        nextSceneId: 'explore_hall_main'
+      }
+    ]
   }
 };

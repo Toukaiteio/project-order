@@ -5,7 +5,6 @@ import {
   Eye,
   Zap,
   Ear,
-  MapPin,
   ChevronRight,
   MessageSquare,
   Package,
@@ -14,8 +13,6 @@ import {
   Shield,
   Swords,
   Plus,
-  Image,
-  Target,
   Clock,
 } from 'lucide-vue-next'
 import type { Component } from 'vue'
@@ -83,7 +80,7 @@ export const WEATHER_NAMES: Record<string, string> = {
   blood_mist: '血雾',
 }
 
-export const resolveWeatherIcon = (weather: string): Component => {
+export const resolveWeatherIcon = (): Component => {
   return Clock // 占位
 }
 

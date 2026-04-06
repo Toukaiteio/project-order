@@ -14,7 +14,7 @@ export const useScheduleStore = defineStore('schedule', {
       1: { isRestDay: true, mainPlotId: 'awake', optionalHooks: [] },
       2: { isRestDay: true, mainPlotId: 'daily_inspection', weather: 'foggy', optionalHooks: [] },
       3: { isRestDay: true, mainPlotId: 'blood_dusk_riot', optionalHooks: [] },
-      4: { isRestDay: true, optionalHooks: [] },
+      4: { isRestDay: true, optionalHooks: ['daily_d04_isolation', 'grey_first_notice'] },
       5: { weather: 'rainy', isRestDay: true, mainPlotId: 'rainy_night_theft', optionalHooks: [] },
       6: { isRestDay: true, optionalHooks: [] },
       7: { isRestDay: true, weather: 'sunny', optionalHooks: [] },
