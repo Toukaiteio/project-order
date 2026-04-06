@@ -633,6 +633,13 @@ export const encounterPlots: Record<string, PlotScene> = {
           ctx.game.addLog('"不该你看的东西。出去。"Aris 的语气变得冰冷而危险。', 'danger');
         },
         nextSceneId: 'explore_med_bay'
+      },
+      {
+        id: 'aris_box_leave',
+        label: '转身离开',
+        timeCost: 0.1,
+        variant: 'default',
+        nextSceneId: 'explore_med_bay'
       }
     ]
   }

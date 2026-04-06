@@ -10,6 +10,7 @@ export interface PlotEffectContext {
 export interface PlotAction extends Omit<ActionChoice, 'label'> {
   label: string | ((context: PlotEffectContext) => string);
   condition?: (context: PlotEffectContext) => boolean;
+  isFallback?: boolean; // 新增：是否作为兜底出口（即使带 condition 也会被验证器视为安全出口）
   effect?: (context: PlotEffectContext) => void;
   nextSceneId?: string | ((context: PlotEffectContext) => string);
   // 留白：允许在行动后插入一段随机的 NPC 独白或环境描写

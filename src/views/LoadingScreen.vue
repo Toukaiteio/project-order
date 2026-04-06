@@ -21,17 +21,33 @@
           </div>
         </div>
 
-        <div v-if="validationResult && !validationResult.isValid" class="error-container">
-          <div class="error-header">校验失败 ({{ validationResult.errors.length }} 个严重错误)</div>
+        <div v-if="validationResult && !validationResult.isValid" class="error-container error-hard">
+          <div class="error-header">⚠ 校验失败 — {{ validationResult.errors.length }} 个严重错误</div>
+          <div class="error-list">
+            <div v-for="e in validationResult.errors" :key="e.sceneId + e.actionId" class="error-item error-item-error">
+              {{ e.details }}
+            </div>
+          </div>
           <div class="error-actions">
              <button class="menu-btn primary" @click="proceedToGame">强行进入</button>
-             <button class="menu-btn" @click="toggleDebugInfo">详细日志</button>
+             <button class="menu-btn" @click="toggleDebugInfo">原始日志</button>
+          </div>
+        </div>
+        <div v-if="validationResult && validationResult.isValid && validationResult.warnings.length > 0" class="error-container error-warn">
+          <div class="warn-header">⚑ {{ validationResult.warnings.length }} 个运行时风险警告</div>
+          <div class="error-list">
+            <div v-for="w in validationResult.warnings" :key="w.sceneId + w.actionId" class="error-item error-item-warn">
+              {{ w.details }}
+            </div>
+          </div>
+          <div class="error-actions" style="margin-top:12px">
+             <button class="menu-btn" @click="toggleDebugInfo">原始日志</button>
           </div>
         </div>
       </div>
       
       <!-- Debug Info -->
-      <div v-if="showDebugInfo && validationResult && !validationResult.isValid" class="debug-info">
+      <div v-if="showDebugInfo && validationResult" class="debug-info">
         <pre>{{ JSON.stringify(validationResult, null, 2) }}</pre>
       </div>
     </div>
@@ -90,12 +106,17 @@ onMounted(async () => {
     progress.value = 100;
 
     if (validationResult.value.isValid) {
-      currentStep.value = 'ALL SYSTEMS NOMINAL. ENTERING...';
+      const warnCount = validationResult.value.warnings.length;
+      if (warnCount > 0) {
+        currentStep.value = `ALL SYSTEMS NOMINAL — ${warnCount} WARNING(S). ENTERING...`;
+      } else {
+        currentStep.value = 'ALL SYSTEMS NOMINAL. ENTERING...';
+      }
       autoEnterTimeout.value = window.setTimeout(() => {
         proceedToGame();
-      }, 600);
+      }, warnCount > 0 ? 1800 : 600);
     } else {
-      currentStep.value = 'CRITICAL ERRORS DETECTED. HALTING.';
+      currentStep.value = `CRITICAL ERRORS DETECTED (${validationResult.value.errors.length}). HALTING.`;
     }
   } finally {
     clearInterval(progressInterval);
@@ -231,14 +252,58 @@ const toggleDebugInfo = () => {
   border-top: 1px dashed rgba(184, 50, 40, 0.3);
 }
 
+.error-container.error-warn {
+  border-top-color: rgba(200, 140, 40, 0.3);
+}
+
 .error-header {
   color: var(--accent-red);
   font-family: var(--font-mono);
   font-weight: 600;
   font-size: 0.75rem;
   letter-spacing: 0.5px;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
   text-align: center;
+}
+
+.warn-header {
+  color: #c8a028;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 0.75rem;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.error-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 16px;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.error-item {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  line-height: 1.5;
+  padding: 4px 8px;
+  border-radius: 3px;
+  word-break: break-all;
+}
+
+.error-item-error {
+  color: #e85050;
+  background: rgba(184, 50, 40, 0.08);
+  border-left: 2px solid rgba(184, 50, 40, 0.5);
+}
+
+.error-item-warn {
+  color: #c8a028;
+  background: rgba(200, 140, 40, 0.08);
+  border-left: 2px solid rgba(200, 140, 40, 0.4);
 }
 
 .error-actions {
@@ -295,3 +360,4 @@ const toggleDebugInfo = () => {
   font-family: var(--font-mono);
 }
 </style>
+

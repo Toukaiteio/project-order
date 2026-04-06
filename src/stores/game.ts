@@ -133,6 +133,7 @@ export const useGameStore = defineStore('game', {
       { id: 'iron_pipe', name: '生锈的铁管', description: '虽然简陋但致命。', icon: 'zap', quantity: 1, category: 'weapon', damage: 10 }
     ] as InventoryItem[],
     logs: [] as LogEntry[],
+    _lastSave: 0, // 新增：记录上次存档时间
     mapNodes: [
       { id: 'cell_01',    col: 2, row: 2, label: '牢房 01', state: 'current', connections: ['corridor_a'] },
       { id: 'corridor_a', col: 4, row: 2, label: '走廊 Alpha', state: 'locked',  connections: ['cell_01', 'hall_main', 'cell_02'] },
@@ -176,12 +177,13 @@ export const useGameStore = defineStore('game', {
       } else {
         this.logs.push(entry);
       }
-      if (this.logs.length > 300) this.logs.shift();
+      if (this.logs.length > 200) this.logs.splice(0, this.logs.length - 200);
     },
 
     addActions(choices: ActionChoice[]) {
       const id = `a-${Date.now()}`;
       this.logs.push({ id, time: Date.now(), type: 'actions', choices });
+      if (this.logs.length > 200) this.logs.splice(0, this.logs.length - 200);
     },
 
     resolveAction(entryId: string, choiceId: string, choiceLabel: string) {
@@ -212,9 +214,11 @@ export const useGameStore = defineStore('game', {
         this.player.stats.maxSanity = Math.max(30, this.player.stats.maxSanity - 1);
         this.addLog('长期的精神折磨正在永久性地摧毁你的大脑。', 'warning');
       }
-      while (this.game.time >= 24) {
+      let safety = 0;
+      while (this.game.time >= 24 && safety < 10) {
         this.game.time -= 24;
         this.advanceDay();
+        safety++;
       }
     },
 
@@ -348,12 +352,20 @@ export const useGameStore = defineStore('game', {
     },
 
     saveGame(slot: string = 'auto') {
+      const now = Date.now();
+      if (now - this._lastSave < 1000) return; // 1秒防抖
+      this._lastSave = now;
+
       const saveData = {
         player: this.player, game: this.game, flags: this.flags,
         inventory: this.inventory, logs: this.logs, mapNodes: this.mapNodes,
-        timestamp: Date.now()
+        timestamp: now
       };
-      localStorage.setItem(`save_slot_${slot}`, JSON.stringify(saveData));
+      try {
+        localStorage.setItem(`save_slot_${slot}`, JSON.stringify(saveData));
+      } catch (e) {
+        console.error('[GameStore] Save failed:', e);
+      }
     },
 
     loadGame(slot: string = 'auto') {
@@ -361,13 +373,27 @@ export const useGameStore = defineStore('game', {
       if (!raw) return false;
       try {
         const data = JSON.parse(raw);
-        this.player = data.player; this.game = data.game; this.flags = data.flags;
-        this.inventory = data.inventory; this.logs = data.logs; this.mapNodes = data.mapNodes;
+        // 断开旧数据的引用连接，防止响应式污染
+        this.player = { ...data.player }; 
+        this.game = { ...data.game }; 
+        this.flags = { ...data.flags };
+        this.inventory = [...data.inventory]; 
+        this.logs = [...data.logs]; 
+        this.mapNodes = [...data.mapNodes];
+
+        // 核心数值二次校验
+        if (typeof this.game.day !== 'number' || isNaN(this.game.day)) this.game.day = 1;
+        if (typeof this.game.time !== 'number' || isNaN(this.game.time)) this.game.time = 8;
+        if (this.game.time >= 24) this.game.time = 0;
+
         if (typeof this.game.hunger !== 'number') this.game.hunger = 58;
         if (typeof this.game.nextDeadlineDay !== 'number' && this.game.nextDeadlineDay !== null) this.game.nextDeadlineDay = null;
         this.updateDeadlineInfo();
         return true;
-      } catch (e) { return false; }
+      } catch (e) { 
+        console.error('[GameStore] Load failed:', e);
+        return false; 
+      }
     },
 
     rollCheck(statValue: number, difficulty: number): { success: boolean; roll: number; total: number } {

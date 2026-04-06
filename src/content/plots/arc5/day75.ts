@@ -59,12 +59,21 @@ export const day75Plots: Record<string, PlotScene> = {
     },
     actions: [
       {
-        id: 'finish_battle',
-        label: '战斗已结束',
+        id: 'finish_battle_ready',
+        label: '查看战斗结果',
         timeCost: 0.1,
-        variant: 'default',
+        variant: 'accent',
         condition: (ctx) => !ctx.game.combat.active,
         nextSceneId: 'marcus_battle_win'
+      },
+      {
+        id: 'fighting_marcus_dummy',
+        label: '生死由命...',
+        timeCost: 0,
+        variant: 'danger',
+        isFallback: true,
+        condition: (ctx) => ctx.game.combat.active,
+        nextSceneId: 'marcus_battle_loop'
       }
     ]
   },

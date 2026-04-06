@@ -78,37 +78,42 @@ export function useScriptValidator() {
       }
     }
 
-    // 步骤2：检查场景是否有死路（没有任何出口）
-    for (const sceneId of allSceneIds) {
-      const scene = getSceneDetails(sceneId) as PlotScene | undefined;
-      if (!scene) continue;
+      // 步骤2：检查场景是否有死路以及独立的 action 是否缺失出口
+      for (const sceneId of allSceneIds) {
+        const scene = getSceneDetails(sceneId) as PlotScene | undefined;
+        if (!scene) continue;
 
-      // 跳过已知的终局 scene 或特殊 scene
-      if (TERMINAL_SCENES.has(sceneId) || SPECIAL_SCENES.has(sceneId)) {
-        continue;
-      }
+        // 跳过已知的终局 scene 或特殊 scene
+        if (TERMINAL_SCENES.has(sceneId) || SPECIAL_SCENES.has(sceneId)) {
+          continue;
+        }
 
-      // 检查是否有有效的出口
-      let hasValidExit = false;
+        let hasValidExit = false;
 
-      if (scene.actions && scene.actions.length > 0) {
-        for (const action of scene.actions) {
-          // 如果有 nextSceneId（无论是字符串还是函数），就认为有出口
-          if (action.nextSceneId) {
-            hasValidExit = true;
-            break;
+        if (scene.actions && scene.actions.length > 0) {
+          for (const action of scene.actions) {
+            if (action.nextSceneId) {
+              hasValidExit = true;
+            } else {
+              // 补充校验：某个独立的 action 缺失了 nextSceneId
+              errors.push({
+                type: 'orphan_action',
+                sceneId,
+                actionId: action.id,
+                details: `Action "${action.id}" 缺失 nextSceneId，玩家点击后将卡死`,
+              });
+            }
           }
         }
-      }
 
-      if (!hasValidExit) {
-        warnings.push({
-          type: 'dead_path',
-          sceneId,
-          details: `Scene "${sceneId}" 没有任何有效的出口 action`,
-        });
+        if (!hasValidExit) {
+          warnings.push({
+            type: 'dead_path',
+            sceneId,
+            details: `Scene "${sceneId}" 没有任何有效的出口 action`,
+          });
+        }
       }
-    }
 
     const duration = performance.now() - startTime;
 

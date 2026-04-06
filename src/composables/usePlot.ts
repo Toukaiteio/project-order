@@ -102,6 +102,9 @@ import { encounterPlots } from '../content/plots/shared/encounters';
 import { locationExplorationPlots } from '../content/plots/shared/locations';
 import type { PlotScene, PlotAction, PlotEffectContext } from '../types/plot';
 
+// 终点场景白名单（允许没有 actions）
+const TERMINAL_SCENES = new Set(['combat_victory', 'combat_defeat', 'game_over_death', 'game_over_win']);
+
 const questioningPlots: Record<string, PlotScene> = {
   'ask_about_facility': {
     id: 'ask_about_facility',
@@ -129,97 +132,25 @@ const questioningPlots: Record<string, PlotScene> = {
 };
 
 // 合并所有剧情脚本
-const ALL_PLOTS: Record<string, PlotScene> = {
-  ...day01Plots,
-  ...day02Plots,
-  ...day03Plots,
-  ...day04Plots,
-  ...day05Plots,
-  ...day06Plots,
-  ...day07Plots,
-  ...day08Plots,
-  ...day09Plots,
-  ...day10Plots,
-  ...day11Plots,
-  ...day12Plots,
-  ...day13Plots,
-  ...day14Plots,
-  ...day15Plots,
-  ...day16Plots,
-  ...day17Plots,
-  ...day18Plots,
-  ...day19Plots,
-  ...day20Plots,
-  ...day21Plots,
-  ...day22Plots,
-  ...day23Plots,
-  ...day24Plots,
-  ...day25Plots,
-  ...day26Plots,
-  ...day27Plots,
-  ...day28Plots,
-  ...day29Plots,
-  ...day30Plots,
-  ...day31Plots,
-  ...day32Plots,
-  ...day33Plots,
-  ...day34Plots,
-  ...day35Plots,
-  ...day36Plots,
-  ...day37Plots,
-  ...day38Plots,
-  ...day39Plots,
-  ...day40Plots,
-  ...day41Plots,
-  ...day42Plots,
-  ...day43Plots,
-  ...day44Plots,
-  ...day45Plots,
-  ...day46Plots,
-  ...day47Plots,
-  ...day48Plots,
-  ...day49Plots,
-  ...day50Plots,
-  ...day51Plots,
-  ...day52Plots,
-  ...day53Plots,
-  ...day54Plots,
-  ...day55Plots,
-  ...day56Plots,
-  ...day57Plots,
-  ...day58Plots,
-  ...day59Plots,
-  ...day60Plots,
-  ...day61Plots,
-  ...day62Plots,
-  ...day63Plots,
-  ...day64Plots,
-  ...day65Plots,
-  ...day66Plots,
-  ...day67Plots,
-  ...day68Plots,
-  ...day69Plots,
-  ...day70Plots,
-  ...day71Plots,
-  ...day72Plots,
-  ...day73Plots,
-  ...day74Plots,
-  ...day75Plots,
-  ...day76Plots,
-  ...day77Plots,
-  ...day78Plots,
-  ...day79Plots,
-  ...day80Plots,
-  ...day81Plots,
-  ...day82Plots,
-  ...day83Plots,
-  ...day84Plots,
-  ...day85Plots,
-  ...day86Plots,
-  ...day87Plots,
-  ...day88Plots,
-  ...day89Plots,
-  ...day90Plots,
+export const ALL_PLOTS: Record<string, PlotScene> = {
+  ...day01Plots, ...day02Plots, ...day03Plots, ...day04Plots, ...day05Plots,
+  ...day06Plots, ...day07Plots, ...day08Plots, ...day09Plots, ...day10Plots,
+  ...day11Plots, ...day12Plots, ...day13Plots, ...day14Plots, ...day15Plots,
+  ...day16Plots, ...day17Plots, ...day18Plots, ...day19Plots, ...day20Plots,
+  ...day21Plots, ...day22Plots, ...day23Plots, ...day24Plots, ...day25Plots,
+  ...day26Plots, ...day27Plots, ...day28Plots, ...day29Plots, ...day30Plots,
+  ...day31Plots, ...day32Plots, ...day33Plots, ...day34Plots, ...day35Plots,
+  ...day36Plots, ...day37Plots, ...day38Plots, ...day39Plots, ...day40Plots,
+  ...day41Plots, ...day42Plots, ...day43Plots, ...day44Plots, ...day45Plots,
+  ...day46Plots, ...day47Plots, ...day48Plots, ...day49Plots, ...day50Plots,
+  ...day51Plots, ...day52Plots, ...day53Plots, ...day54Plots, ...day55Plots,
+  ...day56Plots, ...day57Plots, ...day58Plots, ...day59Plots, ...day60Plots,
+  ...day61Plots, ...day62Plots, ...day63Plots, ...day64Plots, ...day65Plots,
+  ...day66Plots, ...day67Plots, ...day68Plots, ...day69Plots, ...day70Plots,
+  ...day71Plots, ...day72Plots, ...day73Plots, ...day74Plots, ...day75Plots,
+  ...day76Plots, ...day77Plots, ...day78Plots, ...day79Plots, ...day80Plots,
+  ...day81Plots, ...day82Plots, ...day83Plots, ...day84Plots, ...day85Plots,
+  ...day86Plots, ...day87Plots, ...day88Plots, ...day89Plots, ...day90Plots,
   ...companionPlots,
   ...trainingPlots,
   ...npcInteractionPlots,
@@ -248,7 +179,7 @@ export function usePlot() {
     schedule: scheduleStore,
   };
 
-  // 监听待处理剧情，实现跨天或事件自动触发
+  // 监听待处理剧情
   watch(() => gameStore.flags.pendingPlotId, (newPlotId) => {
     if (newPlotId) {
       if (!triggerScene(newPlotId as string)) {
@@ -267,7 +198,7 @@ export function usePlot() {
       return false;
     }
 
-    // 清除末尾的未 resolve action entry（防止主线事件触发时出现多个菜单）
+    // 清除末尾的未 resolve action entry
     const lastEntry = gameStore.logs[gameStore.logs.length - 1];
     if (lastEntry && lastEntry.type === 'actions' && !lastEntry.resolvedId) {
       gameStore.logs.pop();
@@ -283,10 +214,10 @@ export function usePlot() {
     // 触发进入场景的回调
     if (scene.onEnter) scene.onEnter(context);
 
-    // 更新可用行动
-    const validActions: PlotAction[] = [...scene.actions.filter(a => !a.condition || a.condition(context))];
+    // 基础有效行动过滤 (含条件过滤)
+    const validActions: PlotAction[] = [...(scene.actions || []).filter(a => !a.condition || a.condition(context))];
 
-    // 注入原地休息逻辑 -> 统一指向 rest_menu
+    // 注入原地休息逻辑
     if (scene.allowFieldRest) {
       validActions.push({
         id: 'field_rest_entry', label: '原地休息 (风险)', timeCost: 0.1, variant: 'danger',
@@ -317,17 +248,21 @@ export function usePlot() {
       });
     }
 
-    // --- 安全保护：若当前无任何行动，注入撤回上一步 ---
-    if (validActions.length === 0 && previousSceneId.value && previousSceneId.value !== sceneId) {
+    // --- 【运行时死锁保护：流程自愈】 ---
+    if (validActions.length === 0 && !TERMINAL_SCENES.has(sceneId)) {
+      console.warn(`[Plot] Self-healing naming for scene: ${sceneId}`);
+      gameStore.addLog(`[系统监测到流程中断，已启动自愈机制]`, 'warning');
+      
       validActions.push({
-        id: '_undo_last_action',
-        label: '← 撤回上一步 [测试]',
-        timeCost: 0,
+        id: '_emergency_fallback',
+        label: '重整态势 (尝试回到牢房)',
+        timeCost: 0.1,
         variant: 'default',
+        nextSceneId: 'explore_cell_01'
       });
     }
 
-    // 缓存完整行动列表（含注入项），handleAction 从此查找
+    // 缓存完整行动列表
     currentValidActions.value = validActions;
 
     // 将动态标签解析为字符串后传给 addActions
@@ -340,19 +275,18 @@ export function usePlot() {
   };
 
   const handleAction = (choiceId: string) => {
-    // 撤回保护：回到上一个场景
-    if (choiceId === '_undo_last_action') {
-      if (previousSceneId.value) triggerScene(previousSceneId.value);
-      return;
-    }
-
-    // 在完整行动列表（含注入项）中查找，修复动态注入行动无法执行的问题
     const action = currentValidActions.value.find(a => a.id === choiceId);
     if (!action) return;
+
     if (action.effect) action.effect(context);
+    
     if (action.nextSceneId) {
-      const targetId = typeof action.nextSceneId === 'function' ? action.nextSceneId(context) : action.nextSceneId;
+      const targetId = typeof action.nextSceneId === 'function' 
+        ? action.nextSceneId(context) 
+        : action.nextSceneId;
+      
       if (!triggerScene(targetId)) {
+        // 回退逻辑
         if (!triggerScene(`explore_${gameStore.game.location}`) && previousSceneId.value) {
           triggerScene(previousSceneId.value);
         }
@@ -360,33 +294,15 @@ export function usePlot() {
     }
   };
 
-  // 暴露验证用的方法
-  const getAllSceneIds = () => Object.keys(ALL_PLOTS);
-
-  const getSceneDetails = (sceneId: string) => {
-    return ALL_PLOTS[sceneId];
-  };
-
-  const validateScene = (sceneId: string) => {
-    const scene = ALL_PLOTS[sceneId];
-    if (!scene) {
-      return { exists: false, hasActions: false, actionCount: 0 };
-    }
-    return {
-      exists: true,
-      hasActions: scene.actions && scene.actions.length > 0,
-      actionCount: scene.actions?.length || 0,
-    };
-  };
+  const checkSceneExists = (id: string) => !!ALL_PLOTS[id];
 
   return {
     currentSceneId,
     currentScene,
     triggerScene,
     handleAction,
-    checkSceneExists: (id: string) => !!ALL_PLOTS[id],
-    getAllSceneIds,
-    getSceneDetails,
-    validateScene,
+    checkSceneExists,
+    getAllSceneIds: () => Object.keys(ALL_PLOTS),
+    getSceneDetails: (id: string) => ALL_PLOTS[id],
   };
 }

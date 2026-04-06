@@ -316,6 +316,13 @@ export const companionPlots: Record<string, PlotScene> = {
           ctx.game.player.stats.sanity -= 3;
         },
         nextSceneId: 'explore_hall_main'
+      },
+      {
+        id: 'grey_d75_leave',
+        label: '离开大厅',
+        timeCost: 0.1,
+        variant: 'default',
+        nextSceneId: 'explore_hall_main'
       }
     ]
   },
