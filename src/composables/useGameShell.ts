@@ -18,7 +18,7 @@ import {
 } from '../constants/gameUi'
 import type { TabId } from '../constants/gameUi'
 
-export type GameMode = 'menu' | 'creation' | 'playing'
+export type GameMode = 'loading' | 'menu' | 'creation' | 'playing'
 
 export function useGameShell() {
   const gameStore = useGameStore()
@@ -27,7 +27,7 @@ export function useGameShell() {
   const { player, game, logs, inventory, mapNodes, combat } = storeToRefs(gameStore)
   const { triggerScene, handleAction, checkSceneExists } = usePlot()
 
-  const mode = ref<GameMode>('menu')
+  const mode = ref<GameMode>('loading')
   const tab = ref<TabId>('story')
   const sidebarOpen = ref(false)
   const selectedItem = ref<InventoryItem | null>(null)
@@ -310,6 +310,10 @@ export function useGameShell() {
     gameStore.saveGame()
   }
 
+  const onLoadingComplete = () => {
+    mode.value = 'menu'
+  }
+
   const handleMenuAction = (type: 'new' | 'continue' | 'settings') => {
     if (type === 'new') mode.value = 'creation'
     else if (type === 'continue') {
@@ -331,6 +335,7 @@ export function useGameShell() {
     combat,
     handleNavClick,
     handleMenuAction,
+    onLoadingComplete,
     inventory,
     locationName,
     logs,

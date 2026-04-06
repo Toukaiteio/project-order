@@ -350,11 +350,33 @@ export function usePlot() {
     }
   };
 
+  // 暴露验证用的方法
+  const getAllSceneIds = () => Object.keys(ALL_PLOTS);
+
+  const getSceneDetails = (sceneId: string) => {
+    return ALL_PLOTS[sceneId];
+  };
+
+  const validateScene = (sceneId: string) => {
+    const scene = ALL_PLOTS[sceneId];
+    if (!scene) {
+      return { exists: false, hasActions: false, actionCount: 0 };
+    }
+    return {
+      exists: true,
+      hasActions: scene.actions && scene.actions.length > 0,
+      actionCount: scene.actions?.length || 0,
+    };
+  };
+
   return {
     currentSceneId,
     currentScene,
     triggerScene,
     handleAction,
     checkSceneExists: (id: string) => !!ALL_PLOTS[id],
+    getAllSceneIds,
+    getSceneDetails,
+    validateScene,
   };
 }

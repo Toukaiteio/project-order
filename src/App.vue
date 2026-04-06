@@ -1,12 +1,15 @@
 <template>
   <div :class="[
-    'game-root', 
+    'game-root',
     { 'is-low-power': game.energy < 30 },
     { 'is-insane': player.stats.sanity < 40 },
     { 'is-critical-sanity': player.stats.sanity < 15 }
   ]">
+    <!-- 加载屏幕 -->
+    <LoadingScreen v-if="mode === 'loading'" @ready="onLoadingComplete" />
+
     <!-- 主菜单 -->
-    <StartMenu v-if="mode === 'menu'" @action="handleMenuAction" />
+    <StartMenu v-else-if="mode === 'menu'" @action="handleMenuAction" />
 
     <!-- 角色创建 -->
     <CharacterCreation v-else-if="mode === 'creation'" @complete="onCreationComplete" />
@@ -63,6 +66,7 @@
 <script setup lang="ts">
 import StartMenu from './views/StartMenu.vue'
 import CharacterCreation from './views/CharacterCreation.vue'
+import LoadingScreen from './views/LoadingScreen.vue'
 import GameBottomNav from './components/GameBottomNav.vue'
 import GameDialogHost from './components/GameDialogHost.vue'
 import GameShellHeader from './components/GameShellHeader.vue'
@@ -77,6 +81,7 @@ const {
   npcStore,
   executeAction,
   handleMenuAction,
+  onLoadingComplete,
   formattedTime,
   game,
   combat,
