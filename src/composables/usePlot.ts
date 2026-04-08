@@ -195,7 +195,6 @@ export function usePlot() {
     // 特例：如果跳转目标就是当前场景（自循环），允许进入以方便探索同一个场景的不同 action
     const flagKey = `scene_triggered_${sceneId}`;
     if (!scene.repeatable && gameStore.flags[flagKey] && currentSceneId.value !== sceneId) {
-      console.log(`[Plot] Scene ${sceneId} has already triggered and is not repeatable.`);
       return false;
     }
 
