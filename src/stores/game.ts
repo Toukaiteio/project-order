@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { useScheduleStore } from './schedule';
+import { obfuscate, deobfuscate, validateSaveData } from '../utils/saveUtils';
 
 export interface PlayerStats {
   hp: number;
@@ -480,7 +481,9 @@ export const useGameStore = defineStore('game', {
         timestamp: now
       };
       try {
-        localStorage.setItem(`save_slot_${slot}`, JSON.stringify(saveData));
+        const json = JSON.stringify(saveData);
+        const obfuscated = obfuscate(json);
+        localStorage.setItem(`save_slot_${slot}`, obfuscated);
       } catch (e) {
         console.error('[GameStore] Save failed:', e);
       }
@@ -490,7 +493,14 @@ export const useGameStore = defineStore('game', {
       const raw = localStorage.getItem(`save_slot_${slot}`);
       if (!raw) return false;
       try {
-        const data = JSON.parse(raw);
+        const deobfuscated = deobfuscate(raw);
+        const data = JSON.parse(deobfuscated);
+
+        if (!validateSaveData(data)) {
+          console.error('[GameStore] Load failed: Invalid save data structure');
+          return false;
+        }
+
         this.player = { ...data.player }; 
         this.game = { ...data.game }; 
         this.flags = { ...data.flags };
