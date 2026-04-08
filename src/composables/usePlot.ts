@@ -239,6 +239,19 @@ export function usePlot() {
       });
     }
 
+    // 兜底出口：如果场景没有提供任何有效的无条件 action，并且不是特定终止场景
+    const TERMINAL_SCENES = ['combat_victory', 'combat_defeat', 'game_over', 'finale_resolution'];
+    if (!TERMINAL_SCENES.includes(sceneId) && validActions.length === 0) {
+      validActions.push({
+        id: 'fallback_exit',
+        label: '离开这里',
+        timeCost: 0.1,
+        variant: 'default',
+        isFallback: true,
+        nextSceneId: `explore_${gameStore.game.location}` || 'explore_cell_01'
+      });
+    }
+
     // --- 动态 NPC 交互注入 ---
     if (sceneId !== 'npc_menu_general' && sceneId !== 'rest_menu') {
       const currentLoc = gameStore.game.location;
@@ -299,7 +312,10 @@ export function usePlot() {
   const fixCurrentScene = () => {
     if (currentSceneId.value) {
       gameStore.fixSceneStuck(currentSceneId.value);
-      triggerScene(currentSceneId.value);
+      const fallbackLocation = `explore_${gameStore.game.location}` || 'explore_cell_01';
+      if (!triggerScene(fallbackLocation)) {
+         triggerScene('explore_cell_01');
+      }
     }
   };
 

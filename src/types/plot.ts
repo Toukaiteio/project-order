@@ -26,5 +26,6 @@ export interface PlotScene {
   actions: PlotAction[] | ((context: PlotEffectContext) => PlotAction[]);
   allowFieldRest?: boolean; // 新增：是否允许在此场景原地休息
   repeatable?: boolean;     // 新增：是否允许重复触发（默认为 false）
+  condition?: (context: PlotEffectContext) => boolean; // 允许场景级 condition
   onEnter?: (context: PlotEffectContext) => void;
 }
