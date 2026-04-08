@@ -45,7 +45,7 @@ export const day01Plots: Record<string, PlotScene> = {
     text: '你在破烂的枕头下面发现了一张揉皱的纸条。上面歪歪扭扭地写着一行小字：“不要相信穿着白色制服的人，他们不是来救你的。”这句话让你不寒而栗。',
     actions: [
       { 
-        id: 'keep_note', label: '将警告记在心里', timeCost: 0.25, variant: 'default', nextSceneId: 'awake',
+        id: 'keep_note', label: '将警告记在心里', timeCost: 0.25, variant: 'default', nextSceneId: 'explore_cell_01',
         effect: (ctx) => {
           ctx.game.flags.found_crumpled_note = true;
           ctx.game.inventory.push({
@@ -64,7 +64,7 @@ export const day01Plots: Record<string, PlotScene> = {
     text: '墙上的抓痕在昏暗的光线下显得狰狞。你顺着痕迹摸索，指尖触到了一个名字：“林...夕...”。在触碰到这个名字的瞬间，你感到一阵没由来的哀伤，仿佛这个名字曾对你至关重要。',
     actions: [
       { 
-        id: 'ponder_name', label: '试图回忆这个名字', timeCost: 1.0, variant: 'accent', nextSceneId: 'awake',
+        id: 'ponder_name', label: '试图回忆这个名字', timeCost: 1.0, variant: 'accent', nextSceneId: 'explore_cell_01',
         effect: (ctx) => {
           ctx.game.addLog('除了更剧烈的头痛，你什么也没想起来。但你确定，你必须找到她。', 'warning');
           ctx.game.player.stats.intelligence += 1;

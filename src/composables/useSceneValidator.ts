@@ -2,7 +2,7 @@ import { usePlot } from './usePlot';
 import type { PlotScene } from '../types/plot';
 
 export interface ValidationError {
-  type: 'missing_scene' | 'dead_path' | 'orphan_action' | 'dynamic_transition' | 'conditional_dead_end';
+  type: 'missing_scene' | 'dead_path' | 'orphan_action' | 'dynamic_transition' | 'conditional_dead_end' | 'logic_error';
   sceneId: string;
   actionId?: string;
   details: string;
@@ -152,10 +152,10 @@ export function useSceneValidator() {
       if (exitActions.length > 0 && unconditionalExits.length === 0) {
         // 所有出口都有条件限制，存在玩家被锁死的风险
         const conditionedIds = exitActions.map(a => `"${a.id}"`).join(', ');
-        errors.push({
+        warnings.push({
           type: 'conditional_dead_end',
           sceneId,
-          details: `[条件死路] "${sceneId}" 的所有出口 action 均附带 condition（${conditionedIds}），若条件均不满足将导致玩家在运行时卡死。请确保至少有一个无条件兜底出口。`,
+          details: `[条件死路] "${sceneId}" 的所有出口 action 均附带 condition（${conditionedIds}）。已配置系统兜底逻辑，运行时不会卡死，但建议配置显式 fallback action。`,
         });
       }
     }

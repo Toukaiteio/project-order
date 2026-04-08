@@ -300,6 +300,13 @@ export function useGameShell() {
         if (targetId === 'med_bay' && gameStore.game.day > 11 && !gameStore.flags.aris_quest_done) {
           triggerScene('quest_aris_plea'); gameStore.flags.aris_quest_done = true; return
         }
+        if (targetId === 'med_bay' && gameStore.game.day > 3 && !gameStore.flags.has_medic_ledger && !gameStore.flags.ledger_resolved && Math.random() < 0.5) {
+          triggerScene('sidequest_medic_ledger_start'); return;
+        }
+      }
+
+      if (targetId === 'hall_main' && gameStore.flags.has_medic_ledger && !gameStore.flags.ledger_resolved && Math.random() < 0.6) {
+         triggerScene('sidequest_medic_ledger_blackmail'); return;
       }
 
       triggerScene(`explore_${targetId}`)

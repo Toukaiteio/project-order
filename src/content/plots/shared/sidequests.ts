@@ -31,6 +31,87 @@ export const sideQuests: Record<string, PlotScene> = {
       }
     ]
   },
+
+  'sidequest_medic_ledger_start': {
+    id: 'sidequest_medic_ledger_start',
+    locationId: 'med_bay',
+    type: 'story',
+    text: '你在医疗站的角落踢到了一个小本子。上面沾着干涸的血迹，里面密密麻麻地记着各种代号和配给克扣的数量。这显然是某个守卫或线人的账本。',
+    actions: [
+      {
+        id: 'ledger_keep',
+        label: '把它藏进衣服里',
+        timeCost: 0.5,
+        variant: 'danger',
+        effect: (ctx) => {
+          ctx.game.flags.has_medic_ledger = true;
+          ctx.game.inventory.push({
+            id: 'medic_ledger',
+            name: '血污账本',
+            description: '记录着设施内的暗箱交易。极度危险的筹码。',
+            icon: 'document',
+            quantity: 1,
+            category: 'document'
+          });
+          ctx.game.addLog('这东西如果被发现，你绝对活不到明天。但它也能换来巨大的利益。', 'warning');
+        },
+        nextSceneId: 'explore_med_bay'
+      },
+      {
+        id: 'ledger_leave',
+        label: '当没看见踢开',
+        timeCost: 0.1,
+        variant: 'default',
+        effect: (ctx) => {
+          ctx.game.addLog('你把本子踢进了医疗垃圾桶。知道得越少活得越长。', 'info');
+        },
+        nextSceneId: 'explore_med_bay'
+      }
+    ]
+  },
+
+  'sidequest_medic_ledger_blackmail': {
+    id: 'sidequest_medic_ledger_blackmail',
+    locationId: 'hall_main',
+    type: 'warning',
+    text: '一个经常在走廊游荡的线人（代号“老鼠”）拦住了你。他显然在找什么东西，而且注意到了你鼓囊囊的口袋。',
+    condition: (ctx) => ctx.game.flags.has_medic_ledger && !ctx.game.flags.ledger_resolved,
+    actions: [
+      {
+        id: 'ledger_sell',
+        label: '把账本卖给他 (获得 40 积分)',
+        timeCost: 0.5,
+        variant: 'accent',
+        effect: (ctx) => {
+          const idx = ctx.game.inventory.findIndex((i: any) => i.id === 'medic_ledger');
+          if (idx >= 0) ctx.game.inventory.splice(idx, 1);
+          ctx.game.flags.ledger_resolved = true;
+          ctx.game.game.money += 40;
+          ctx.game.addLog('“算你识相。”他塞给你一叠皱巴巴的额度卡，一把夺过本子。', 'info');
+        },
+        nextSceneId: 'explore_hall_main'
+      },
+      {
+        id: 'ledger_refuse_sell',
+        label: '否认见过',
+        timeCost: 0.5,
+        variant: 'danger',
+        effect: (ctx) => {
+          const check = ctx.game.rollCheck(ctx.game.player.stats.strength, 13);
+          if (check.success) {
+            ctx.game.addLog('你强硬的态度逼退了他。但他看你的眼神充满了怨毒。', 'warning');
+          } else {
+            ctx.game.player.stats.hp -= 15;
+            const idx = ctx.game.inventory.findIndex((i: any) => i.id === 'medic_ledger');
+            if (idx >= 0) ctx.game.inventory.splice(idx, 1);
+            ctx.game.flags.ledger_resolved = true;
+            ctx.game.addLog('他突然发难，给了你一拳并抢走了本子。你连还手的机会都没有。', 'danger');
+          }
+        },
+        nextSceneId: 'explore_hall_main'
+      }
+    ]
+  },
   'quest_satoshi_find_part': {
     id: 'quest_satoshi_find_part',
     locationId: 'garbage_chute',
