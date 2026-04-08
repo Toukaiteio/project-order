@@ -20,7 +20,7 @@
           v-for="item in inventory"
           :key="item.id"
           :class="['inv-item', { 'is-equipped': item.id === equippedWeapon }]"
-          @click="selectedItem = item"
+          @click="selectedItemId = item.id"
         >
           <div class="ii-icon-wrap">
             <Package :size="18" />
@@ -42,7 +42,7 @@
       <div v-if="selectedItem" class="inv-detail">
         <div class="idet-header">
           <span class="idet-name">{{ selectedItem.name }}</span>
-          <button class="idet-close" @click="selectedItem = null">
+          <button class="idet-close" @click="selectedItemId = null">
             <X :size="14" />
           </button>
         </div>
@@ -72,7 +72,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { ChevronRight, Package, X } from 'lucide-vue-next'
 import type { InventoryItem } from '../stores/game'
 
@@ -88,7 +88,19 @@ const emit = defineEmits<{
   useItem: [id: string]
 }>()
 
-const selectedItem = ref<InventoryItem | null>(null)
+const selectedItemId = ref<string | null>(null)
+
+const inventoryMap = computed(() => {
+  const map = new Map<string, InventoryItem>()
+  props.inventory.forEach((item) => {
+    map.set(item.id, item)
+  })
+  return map
+})
+
+const selectedItem = computed(() => {
+  return selectedItemId.value ? inventoryMap.value.get(selectedItemId.value) ?? null : null
+})
 
 const handleUse = () => {
   if (selectedItem.value) {
@@ -99,9 +111,9 @@ const handleUse = () => {
 
 watch(
   () => props.inventory,
-  (items) => {
-    if (selectedItem.value && !items.some((item) => item.id === selectedItem.value?.id)) {
-      selectedItem.value = null
+  () => {
+    if (selectedItemId.value && !inventoryMap.value.has(selectedItemId.value)) {
+      selectedItemId.value = null
     }
   },
   { deep: true },
